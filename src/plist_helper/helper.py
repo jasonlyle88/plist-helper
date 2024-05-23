@@ -20,8 +20,14 @@ class PlistHelper:
     This class can be instantiated with a string argument that is a file path.
     The file path can be absolute or relative to the current working directory.
 
-    It is also possible to instantiate this class with a bytestring that represents
-    the content of a plist file.
+    It is also possible to instantiate this class with a bytestring or bytearray
+    that represents the content of a plist file.
+
+    Examples:
+        from plist_helper import PlistHelper
+        PlistHelper('/path/to/a/plist/file.plist')
+        PlistHelper('relative/path/to/a/plist/file.plist')
+        PlistHelper(b'<plist><dict><key>hello</key><string>world!</string></dict></plist>')
 
     NOTES:
         This class, as well as the underlying plistlib, is unable to handle plist files
@@ -843,7 +849,20 @@ class PlistHelper:
         else:
             self.update_entry(path, value)
 
-    # def merge_entry(
-    #     self,
-    #     merge_plist_info
-    # )
+    def merge_entry(
+        self,
+        merge_plist_info: str | bytes | bytearray,
+        merge_into_path: list | tuple | str | int = None,
+        merge_from_path: list | tuple | str | int = None,
+        overwrite: bool = True
+    ):
+        """
+        Merge in a plist file (or a subset of a plist file) to the current
+        plist.
+
+        TODO
+        """
+
+
+
+        print('TODO') # TODO
