@@ -913,25 +913,40 @@ class PlistHelper:
             # If not overwriting, then there is nothing to do
             return
 
-        # Remaining use case at this point:
-        # Collection root merging root
-        # Collection root merging child
+        # Remaining use cases at this point:
+        # Collection root merging entry with non-collection
+        # Collection root merging entry with collection
 
-        # parent_merge_into_path = None
-        # merge_into_key = None
-        # parent_merge_into_entry = None
+        merge_into_entry = self.__get_entry(self.__plist_data, merge_into_path)
+        merge_into_data_spec = self.__get_entry_data_type_class(merge_into_entry)
+        merge_from_data_spec = self.__get_entry_data_type_class(merge_from_entry)
 
-        # if len(merge_into_path) >= 1:
-        #     parent_merge_into_path = merge_into_path.copy()
-        #     merge_into_key = parent_merge_into_path.pop()
+        if merge_into_data_spec['name'] not in ('array', 'dict'):
+            if not overwrite:
+                # Merge entry exists and this is not overwriting, so there
+                # is nothing to do
+                return
 
-        #     try:
-        #         parent_merge_into_entry = self.__get_entry(
-        #             self.__plist_data,
-        #             parent_merge_into_path
-        #         )
-        #     except Exception as e:
-        #         raise RuntimeError('Invalid merge_into_path') from e
+            # Since root has to be collection and the merge into entry is
+            # not a collection, this is definitely inserting into a child.
+            # So no need to verify the parent exists, it has to exist
+            parent_merge_into_path = merge_into_path.copy()
+            merge_into_key = parent_merge_into_path.pop()
+
+            parent_merge_into_entry = self.__get_entry(
+                self.__plist_data,
+                parent_merge_into_path
+            )
+
+            if merge_into_data_spec['name'] in 'array':
+                merge_into_key = int(merge_into_key)
+            elif merge_into_data_spec['name'] in 'dict':
+                merge_into_key = str(merge_into_key)
+
+            parent_merge_into_entry[merge_into_key] = merge_into_entry
+
+        # Remaining use cases at this point:
+        # Collection root merging entry with collection
 
 
         print('TODO') # TODO
