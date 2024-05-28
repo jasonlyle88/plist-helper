@@ -62,13 +62,13 @@ class PlistHelper:
         {'name': 'dict',    'class': dict,              'otherClasses': []},
         {'name': 'integer', 'class': int,               'otherClasses': []},
         {'name': 'real',    'class': float,             'otherClasses': []},
-        {'name': 'string',  'class': str,               'otherClasses': []}
+        {'name': 'string',  'class': str,               'otherClasses': []},
     )
 
     # pylint: disable=no-member
     FILE_FORMATS = (
         {'name': 'binary',  'type': plistlib.FMT_BINARY},
-        {'name': 'xml',     'type': plistlib.FMT_XML}
+        {'name': 'xml',     'type': plistlib.FMT_XML},
     )
     # pylint: enable=no-member
 
@@ -128,7 +128,7 @@ class PlistHelper:
         var
     ):
         """
-        Get a copy of a variable as a value copy, not a reference copy
+        Get a copy of a variable as a value copy, not a reference copy.
 
         TODO
         """
@@ -170,7 +170,7 @@ class PlistHelper:
         data_type_name: str
     ):
         """
-        Get a plist data type specification based on the provided data type name
+        Get a plist data type specification based on the provided data type name.
 
         TODO
         """
@@ -268,7 +268,7 @@ class PlistHelper:
         path: list | tuple | str | int
     ):
         """
-        Take a path list/tuple/str/int and make sure it is always a list
+        Take a path list/tuple/str/int and make sure it is always a list.
 
         TODO
         """
@@ -305,7 +305,7 @@ class PlistHelper:
         root_entry_data_type: str = 'dict'
     ):
         """
-        Create a new, valid plist file with an empty root entry
+        Create a new, valid plist file with an empty root entry.
 
         TODO
         """
@@ -375,7 +375,7 @@ class PlistHelper:
         self
     ):
         """
-        Check if a plist file is a valid plist
+        Check if a plist file is a valid plist.
 
         TODO
         """
@@ -388,7 +388,7 @@ class PlistHelper:
         path: list | tuple | str | int = None
     ):
         """
-        Check if an entry exists
+        Check if an entry exists.
 
         TODO
         """
@@ -410,7 +410,7 @@ class PlistHelper:
         path: list
     ):
         """
-        Get the python data representation of a plist entry
+        Get the python data representation of a plist entry.
 
         TODO
         """
@@ -453,7 +453,7 @@ class PlistHelper:
         path: list | tuple | str | int = None
     ):
         """
-        Get the python data representation of a plist entry
+        Get the python data representation of a plist entry.
 
         TODO
         """
@@ -489,7 +489,7 @@ class PlistHelper:
         path: list | tuple | str | int = None
     ):
         """
-        Get the keys of the specified dict entry
+        Get the keys of the specified dict entry.
 
         TODO
         """
@@ -548,6 +548,9 @@ class PlistHelper:
             )
 
         path = self.__normalize_path(path)
+
+        if output_format is None:
+            output_format = 'xml'
 
         file_format_spec = self.__get_file_format(output_format)
 
