@@ -33,6 +33,12 @@ class PlistHelper:
         This class, as well as the underlying plistlib, is unable to handle plist files
         that contain empty 'bool', 'date', 'integer', or 'real' data entries.
 
+        While using tuple data to represent plist arrays is possible, it is not
+        recommended. Using tuple data with insert_entry, insert_array_append, update_entry,
+        and upsert_entry can cause issues if that data needs to be changed later.
+        For this reason, it is recommended to always represent plist arrays as python
+        lists instead of tuples.
+
     TODO
     """
 
@@ -159,7 +165,7 @@ class PlistHelper:
 
 
     @classmethod
-    def __get_entry_data_type_name(
+    def __get_entry_data_type_by_name(
         cls,
         data_type_name: str
     ):
@@ -184,7 +190,7 @@ class PlistHelper:
 
 
     @classmethod
-    def __get_entry_data_type_class(
+    def __get_entry_data_type_by_class(
         cls,
         data: object
     ):
@@ -305,7 +311,7 @@ class PlistHelper:
         """
 
         file_format_spec = cls.__get_file_format(output_file_format)
-        entry_data_type_spec = cls.__get_entry_data_type_name(root_entry_data_type)
+        entry_data_type_spec = cls.__get_entry_data_type_by_name(root_entry_data_type)
 
         if entry_data_type_spec['name'] not in ('bool', 'date', 'integer', 'real'):
             empty_value = entry_data_type_spec['class']()
@@ -377,7 +383,7 @@ class PlistHelper:
         return self.__plist_data is not None
 
 
-    def entry_exists(
+    def exists(
         self,
         path: list | tuple | str | int = None
     ):
@@ -390,14 +396,15 @@ class PlistHelper:
         path = self.__normalize_path(path)
 
         try:
-            self.__get_entry(self.__plist_data, path)
+            self.__get(self.__plist_data, path)
         except KeyError:
             return False
 
         return True
 
+
     @classmethod
-    def __get_entry(
+    def __get(
         cls,
         plist_data,
         path: list
@@ -419,7 +426,7 @@ class PlistHelper:
                 string_path += '.'
             string_path += str(path_part).replace('.', r'\.')
 
-            entry_data_type_spec = cls.__get_entry_data_type_class(entry)
+            entry_data_type_spec = cls.__get_entry_data_type_by_class(entry)
 
             key_error_text = '('+entry_data_type_spec['name']+') Cannot access "'+string_path+'"'
 
@@ -441,7 +448,7 @@ class PlistHelper:
         return entry
 
 
-    def get_entry(
+    def get(
         self,
         path: list | tuple | str | int = None
     ):
@@ -453,12 +460,12 @@ class PlistHelper:
 
         path = self.__normalize_path(path)
 
-        entry = self.__get_entry(self.__plist_data, path)
+        entry = self.__get(self.__plist_data, path)
 
         return self.__get_variable_value_copy(entry)
 
 
-    def get_entry_type(
+    def get_type(
         self,
         path: list | tuple | str | int = None
     ):
@@ -470,9 +477,9 @@ class PlistHelper:
 
         path = self.__normalize_path(path)
 
-        entry = self.__get_entry(self.__plist_data, path)
+        entry = self.__get(self.__plist_data, path)
 
-        entry_data_type_spec = self.__get_entry_data_type_class(entry)
+        entry_data_type_spec = self.__get_entry_data_type_by_class(entry)
 
         return entry_data_type_spec['name']
 
@@ -489,9 +496,9 @@ class PlistHelper:
 
         path = self.__normalize_path(path)
 
-        entry = self.__get_entry(self.__plist_data, path)
+        entry = self.__get(self.__plist_data, path)
 
-        entry_data_type_spec = self.__get_entry_data_type_class(entry)
+        entry_data_type_spec = self.__get_entry_data_type_by_class(entry)
 
         if entry_data_type_spec['name'] != 'dict':
             raise ValueError('Specified entry is not a dict')
@@ -511,9 +518,9 @@ class PlistHelper:
 
         path = self.__normalize_path(path)
 
-        entry = self.__get_entry(self.__plist_data, path)
+        entry = self.__get(self.__plist_data, path)
 
-        entry_data_type_spec = self.__get_entry_data_type_class(entry)
+        entry_data_type_spec = self.__get_entry_data_type_by_class(entry)
 
         if entry_data_type_spec['name'] != 'array':
             raise ValueError('Specified entry is not an array')
@@ -548,7 +555,7 @@ class PlistHelper:
         if path is None:
             plist_data = self.__plist_data
         else:
-            plist_data = self.__get_entry(self.__plist_data, path)
+            plist_data = self.__get(self.__plist_data, path)
 
         output = plistlib.dumps(
             plist_data,
@@ -605,7 +612,7 @@ class PlistHelper:
         if path is None:
             plist_data = self.__plist_data
         else:
-            plist_data = self.__get_entry(self.__plist_data, path)
+            plist_data = self.__get(self.__plist_data, path)
 
         # Use a temporary file in case there is any issue converting the data.
         # This prevents the target file from being in a bad state if
@@ -619,7 +626,7 @@ class PlistHelper:
                 fp.write(tmp.read())
 
 
-    def insert_entry(
+    def insert(
         self,
         path: list | tuple | str | int,
         value
@@ -630,7 +637,7 @@ class PlistHelper:
         TODO
         """
 
-        root_data_type_spec = self.__get_entry_data_type_class(self.__plist_data)
+        root_data_type_spec = self.__get_entry_data_type_by_class(self.__plist_data)
 
         if root_data_type_spec['name'] not in ('array', 'dict'):
             raise KeyError(
@@ -643,22 +650,22 @@ class PlistHelper:
             raise KeyError('Insertion path must be provided')
 
         try:
-            self.__get_entry_data_type_class(value)
+            self.__get_entry_data_type_by_class(value)
         except Exception as e:
             raise TypeError('Invalid data type for provided value') from e
 
-        if self.entry_exists(path):
+        if self.exists(path):
             raise RuntimeError('An entry at this path already exists')
 
         parent_path=list(path)
         insertion_key = parent_path.pop()
 
         try:
-            parent_entry = self.__get_entry(self.__plist_data, parent_path)
+            parent_entry = self.__get(self.__plist_data, parent_path)
         except KeyError as e:
             raise KeyError('Cannot get entry parent') from e
 
-        parent_entry_data_type_spec = self.__get_entry_data_type_class(parent_entry)
+        parent_entry_data_type_spec = self.__get_entry_data_type_by_class(parent_entry)
 
         if parent_entry_data_type_spec['name'] == 'array':
             try:
@@ -701,7 +708,7 @@ class PlistHelper:
         TODO
         """
 
-        root_data_type_spec = self.__get_entry_data_type_class(self.__plist_data)
+        root_data_type_spec = self.__get_entry_data_type_by_class(self.__plist_data)
 
         if root_data_type_spec['name'] not in ('array', 'dict'):
             raise KeyError(
@@ -713,32 +720,32 @@ class PlistHelper:
         if len(path) == 0:
             raise KeyError('Insertion path must be provided')
 
-        array_data_type_spec = self.__get_entry_data_type_name('array')
+        array_data_type_spec = self.__get_entry_data_type_by_name('array')
 
         created_target_array=False
-        if not self.entry_exists(path):
-            self.insert_entry(path, array_data_type_spec['class']())
+        if not self.exists(path):
+            self.insert(path, array_data_type_spec['class']())
             created_target_array=True
 
         try:
-            entry = self.__get_entry(self.__plist_data, path)
+            entry = self.__get(self.__plist_data, path)
 
-            entry_data_type_spec = self.__get_entry_data_type_class(entry)
+            entry_data_type_spec = self.__get_entry_data_type_by_class(entry)
 
             if entry_data_type_spec['name'] != 'array':
                 raise RuntimeError('The provided path must specify an array entry')
 
             path.append(len(entry))
 
-            self.insert_entry(path, value)
+            self.insert(path, value)
         except Exception:
             if created_target_array:
-                self.delete_entry(path)
+                self.delete(path)
 
             raise
 
 
-    def update_entry(
+    def update(
         self,
         path: list | tuple | str | int,
         value
@@ -751,7 +758,7 @@ class PlistHelper:
         TODO
         """
 
-        root_data_type_spec = self.__get_entry_data_type_class(self.__plist_data)
+        root_data_type_spec = self.__get_entry_data_type_by_class(self.__plist_data)
 
         path = self.__normalize_path(path)
 
@@ -761,11 +768,11 @@ class PlistHelper:
             )
 
         try:
-            self.__get_entry_data_type_class(value)
+            self.__get_entry_data_type_by_class(value)
         except Exception as e:
             raise TypeError('Invalid data type for provided value') from e
 
-        if not self.entry_exists(path):
+        if not self.exists(path):
             raise RuntimeError('An entry does not exist at this path')
 
         try:
@@ -780,19 +787,19 @@ class PlistHelper:
         else:
             parent_path=list(path)
             update_key = parent_path.pop()
-            parent_entry = self.__get_entry(self.__plist_data, parent_path)
+            parent_entry = self.__get(self.__plist_data, parent_path)
 
-            parent_entry_data_type_spec = self.__get_entry_data_type_class(parent_entry)
+            parent_entry_data_type_spec = self.__get_entry_data_type_by_class(parent_entry)
 
             if parent_entry_data_type_spec['name'] == 'array':
                 update_key = int(update_key)
-                parent_entry.insert(update_key, value)
             elif parent_entry_data_type_spec['name'] == 'dict':
                 update_key = str(update_key)
-                parent_entry[update_key] = value
+
+            parent_entry[update_key] = value
 
 
-    def delete_entry(
+    def delete(
         self,
         path: list | tuple | str | int
     ):
@@ -802,7 +809,7 @@ class PlistHelper:
         TODO
         """
 
-        root_data_type_spec = self.__get_entry_data_type_class(self.__plist_data)
+        root_data_type_spec = self.__get_entry_data_type_by_class(self.__plist_data)
 
         if root_data_type_spec['name'] not in ('array', 'dict'):
             raise KeyError(
@@ -814,14 +821,14 @@ class PlistHelper:
         if len(path) == 0:
             raise RuntimeError('Cannot delete plist root entry')
 
-        if not self.entry_exists(path):
+        if not self.exists(path):
             raise RuntimeError('An entry does not exist at this path')
 
         parent_path=list(path)
         delete_key = parent_path.pop()
-        parent_entry = self.__get_entry(self.__plist_data, parent_path)
+        parent_entry = self.__get(self.__plist_data, parent_path)
 
-        parent_data_type_spec = self.__get_entry_data_type_class(parent_entry)
+        parent_data_type_spec = self.__get_entry_data_type_by_class(parent_entry)
 
         if parent_data_type_spec['name'] == 'array':
             delete_key = int(delete_key)
@@ -831,7 +838,7 @@ class PlistHelper:
         del parent_entry[delete_key]
 
 
-    def upsert_entry(
+    def upsert(
         self,
         path: list | tuple | str | int,
         value
@@ -845,17 +852,106 @@ class PlistHelper:
 
         path = self.__normalize_path(path)
 
-        if not self.entry_exists(path):
-            self.insert_entry(path, value)
+        if not self.exists(path):
+            self.insert(path, value)
         else:
-            self.update_entry(path, value)
+            self.update(path, value)
 
 
-    def merge_entry(
+    def __merge(
         self,
-        merge_from_plist_info: str | bytes | bytearray,
-        merge_from_path: list | tuple | str | int = None,
-        merge_into_path: list | tuple | str | int = None,
+        source_entry,
+        target_path: list | tuple | str | int,
+        overwrite: bool
+    ):
+        """
+        Recursively merge python data (source_entry) into the current plist.
+
+        TODO
+        """
+
+        target_path = self.__normalize_path(target_path)
+
+        ########################################################################
+        ## Handle special root update cases
+        ########################################################################
+
+        root_data_type_spec = self.__get_entry_data_type_by_class(self.__plist_data)
+
+        if len(target_path) > 0 and root_data_type_spec['name'] not in ('array', 'dict'):
+            raise RuntimeError('Cannot merge into child of non-collection root plist')
+        if len(target_path) == 0 and root_data_type_spec['name'] not in ('array', 'dict'):
+            # Merging into root
+            if overwrite:
+                # Merging into a non-collection type at the root is the same
+                # as updating to the given value. So just do this and be done
+                self.__plist_data = source_entry
+
+            # Root has to exist
+            # Root is non-collection type
+            # If overwriting, data was set above and there is nothing left to do
+            # If not overwriting, then there is nothing to do
+            return
+
+        ########################################################################
+        ## Merge where target does not exist = simple insert
+        ########################################################################
+
+        if not self.exists(target_path):
+            self.insert(target_path, source_entry)
+            return
+
+        ########################################################################
+        ## Merge logic
+        ########################################################################
+        # At this point, both the source and the target are known to exist.
+        # Remaining use cases at this point:
+        #   1 - overwrite: no, target_data_type is simple
+        #       Nothing to do
+        #   2 - overwrite: no, target_data_type is collection, source_data_type is simple
+        #       Nothing to do
+        #   3 - overwrite: no, target_data_type is collection, source_data_type is collection
+        #       Manual merge: values that exist in both collections are not overwritten in target
+        #   4 - overwrite: yes, target_data_type is simple
+        #       Direct update
+        #   5 - overwrite: yes, target_data_type is collection, source_data_type is simple
+        #       Direct update
+        #   6 - overwrite: yes, target_data_type is collection, source_data_type is collection
+        #       Manual merge: values that exist in both collections are overwritten in target
+
+        target_entry = self.__get(self.__plist_data, target_path)
+        target_data_spec = self.__get_entry_data_type_by_class(target_entry)
+        source_data_spec = self.__get_entry_data_type_by_class(source_entry)
+
+        if (
+            target_data_spec['name'] not in ('array', 'dict') or
+            source_data_spec['name'] not in ('array', 'dict')
+        ):
+            if overwrite:
+                # Case 4 or 5
+                self.update(target_path, source_entry)
+
+            # Case 1 or 2 (also end of case 4 or 5)
+            return
+
+        # Case 3 or 6
+        if source_data_spec['name'] == 'array':
+            for idx, elem in enumerate(source_entry):
+                new_target_path = target_path.copy()
+                new_target_path.append(idx)
+                self.__merge(elem, new_target_path, overwrite)
+        elif source_data_spec['name'] == 'dict':
+            for idx, elem in source_entry.items():
+                new_target_path = target_path.copy()
+                new_target_path.append(idx)
+                self.__merge(elem, new_target_path, overwrite)
+
+
+    def merge(
+        self,
+        source_plist_info: str | bytes | bytearray,
+        source_path: list | tuple | str | int = None,
+        target_path: list | tuple | str | int = None,
         overwrite: bool = True
     ):
         """
@@ -865,88 +961,35 @@ class PlistHelper:
         TODO
         """
 
+        ########################################################################
+        ##  Parameter verifications
+        ########################################################################
+
         if not isinstance(overwrite, bool):
             raise TypeError(
                 'Invalid overwrite type. Execpted boolean (bool), got '
                 + type(overwrite).__name__
             )
 
-        if isinstance(merge_from_plist_info, (bytes, bytearray)):
-            merge_from_plist = self.__parse_bytestring(merge_from_plist_info)
-        elif isinstance(merge_from_plist_info, str):
-            merge_from_plist = self.__parse_file(merge_from_plist_info)
+        if isinstance(source_plist_info, (bytes, bytearray)):
+            source_plist = self.__parse_bytestring(source_plist_info)
+        elif isinstance(source_plist_info, str):
+            source_plist = self.__parse_file(source_plist_info)
         else:
             raise TypeError(
-                'Invalid merge_from_plist_info type.' + ' '
+                'Invalid source_plist_info type.' + ' '
                 + 'Execpted string (str), bytestring (bytes), or bytearray, got '
-                + type(merge_from_plist_info).__name__
+                + type(source_plist_info).__name__
             )
 
-        merge_from_path = self.__normalize_path(merge_from_path)
+        source_path = self.__normalize_path(source_path)
 
         try:
-            merge_from_entry = self.__get_entry(merge_from_plist, merge_from_path)
+            source_entry = self.__get(source_plist, source_path)
         except Exception as e:
-            raise RuntimeError('Invalid merge_from_path') from e
+            raise RuntimeError('Invalid source_path') from e
 
-        if not self.entry_exists(merge_into_path):
-            # Merge into entry does not currently exist, so no need to merge.
-            # Just do an insert of the requested data and be done
-            self.insert_entry(merge_into_path, merge_from_entry)
-            return
-
-        root_data_type_spec = self.__get_entry_data_type_class(self.__plist_data)
-        merge_into_path = self.__normalize_path(merge_into_path)
-
-        if len(merge_into_path) > 0 and root_data_type_spec['name'] not in ('array', 'dict'):
-            raise RuntimeError('Cannot merge into child of non-collection root plist')
-        if len(merge_into_path) == 0 and root_data_type_spec['name'] not in ('array', 'dict'):
-            # Merging into root
-            if overwrite:
-                # Merging into a non-collection type at the root is the same
-                # as updating to the given value. So just do this and be done
-                self.__plist_data = merge_from_entry
-
-            # Root has to exist
-            # Root is non-collection type
-            # If overwriting, data was set above
-            # If not overwriting, then there is nothing to do
-            return
-
-        # Remaining use cases at this point:
-        # Collection root merging entry with non-collection
-        # Collection root merging entry with collection
-
-        merge_into_entry = self.__get_entry(self.__plist_data, merge_into_path)
-        merge_into_data_spec = self.__get_entry_data_type_class(merge_into_entry)
-        merge_from_data_spec = self.__get_entry_data_type_class(merge_from_entry)
-
-        if merge_into_data_spec['name'] not in ('array', 'dict'):
-            if not overwrite:
-                # Merge entry exists and this is not overwriting, so there
-                # is nothing to do
-                return
-
-            # Since root has to be collection and the merge into entry is
-            # not a collection, this is definitely inserting into a child.
-            # So no need to verify the parent exists, it has to exist
-            parent_merge_into_path = merge_into_path.copy()
-            merge_into_key = parent_merge_into_path.pop()
-
-            parent_merge_into_entry = self.__get_entry(
-                self.__plist_data,
-                parent_merge_into_path
-            )
-
-            if merge_into_data_spec['name'] in 'array':
-                merge_into_key = int(merge_into_key)
-            elif merge_into_data_spec['name'] in 'dict':
-                merge_into_key = str(merge_into_key)
-
-            parent_merge_into_entry[merge_into_key] = merge_into_entry
-
-        # Remaining use cases at this point:
-        # Collection root merging entry with collection
-
-
-        print('TODO') # TODO
+        ########################################################################
+        ##  Merge
+        ########################################################################
+        self.__merge(source_entry, target_path, overwrite)
