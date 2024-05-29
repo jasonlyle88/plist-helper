@@ -4,10 +4,11 @@ os.path:    Used to work with os files and pathing.
 plistlib:   Provide ability to work with Apple plist files.
 tempfile:   Used to manage temporary files for the operating systems.
 """
-import datetime
-import os.path
-import plistlib
-import tempfile
+import datetime as _datetime
+from io import BytesIO as _BytesIO
+import os.path  as _os_path
+import plistlib as _plistlib
+import tempfile as _tempfile
 
 class PlistHelper:
     """
@@ -42,8 +43,12 @@ class PlistHelper:
     TODO
     """
 
-    __INFO_TYPE_FILE = 'file'
-    __INFO_TYPE_REPRESENTATION = 'representation'
+    PLIST_INFO_TYPE_FILE = 'file'
+    PLIST_INFO_TYPE_REPRESENTATION = 'representation'
+
+    __PLIST_INFO_TYPES = (
+        PLIST_INFO_TYPE_FILE, PLIST_INFO_TYPE_REPRESENTATION
+    )
 
     """
     Representation of the data types allowed for plist entries.
@@ -54,58 +59,63 @@ class PlistHelper:
     otherClasses:   Other data type classes that can be used when converting
                     python data to a plist.
     """
-    ENTRY_DATA_TYPES = (
-        {'name': 'array',   'class': list,              'otherClasses': [tuple]},
-        {'name': 'bool',    'class': bool,              'otherClasses': []},
-        {'name': 'data',    'class': bytes,             'otherClasses': [bytearray]},
-        {'name': 'date',    'class': datetime.datetime, 'otherClasses': []},
-        {'name': 'dict',    'class': dict,              'otherClasses': []},
-        {'name': 'integer', 'class': int,               'otherClasses': []},
-        {'name': 'real',    'class': float,             'otherClasses': []},
-        {'name': 'string',  'class': str,               'otherClasses': []},
-    )
+    ENTRY_DATA_TYPES = {
+        'array':    {'class': list,                  'otherClasses': [tuple]},
+        'bool':     {'class': bool,                  'otherClasses': []},
+        'data':     {'class': bytes,                 'otherClasses': [bytearray]},
+        'date':     {'class': _datetime.datetime,    'otherClasses': []},
+        'dict':     {'class': dict,                  'otherClasses': []},
+        'integer':  {'class': int,                   'otherClasses': []},
+        'real':     {'class': float,                 'otherClasses': []},
+        'string':   {'class': str,                   'otherClasses': []},
+    }
+
+    for key, value in ENTRY_DATA_TYPES.items():
+        value['name'] = key
 
     # pylint: disable=no-member
-    FILE_FORMATS = (
-        {'name': 'binary',  'type': plistlib.FMT_BINARY},
-        {'name': 'xml',     'type': plistlib.FMT_XML},
-    )
+    FILE_FORMATS = {
+        'binary':   {'type': _plistlib.FMT_BINARY,},
+        'xml':      {'type': _plistlib.FMT_XML,},
+    }
     # pylint: enable=no-member
+
+    for key, value in FILE_FORMATS.items():
+        value['name'] = key
 
     def __init__(
         self,
-        plist_info: str | bytes | bytearray
+        plist_info_type: str,
+        plist_info: str | bytes | bytearray,
     ):
         # List of instance attributes before initialization
         self.__plist_info_type = None
+        self.__plist_info_format = None
         self.__plist_info = None
         self.__plist_data = None
 
-        if not isinstance(plist_info, (str, bytes, bytearray)):
-            raise TypeError(
-                'Invalid plist_info type. Execpted string (str) or bytestring (bytes), got '
-                + type(plist_info).__name__
+        if plist_info_type not in self.__PLIST_INFO_TYPES:
+            raise RuntimeError(
+                'Invalid plist_info_type: "' + str(plist_info_type) + '"'
             )
 
+        self.__plist_info_type = plist_info_type
         self.__plist_info = plist_info
 
-        if isinstance(plist_info, (bytes, bytearray)):
-            self.__plist_info_type = self.__INFO_TYPE_REPRESENTATION
-            self.__plist_data = self.__parse_bytestring(plist_info)
-        if isinstance(plist_info, str):
-            self.__plist_info_type = self.__INFO_TYPE_FILE
-
-            plist_info = os.path.realpath(plist_info)
-            if not os.path.isfile(plist_info):
+        if plist_info_type == self.PLIST_INFO_TYPE_REPRESENTATION:
+            self.__plist_info_format, self.__plist_data = self.__parse_bytes(plist_info)
+        elif plist_info_type == self.PLIST_INFO_TYPE_FILE:
+            plist_info = _os_path.realpath(plist_info)
+            if not _os_path.isfile(plist_info):
                 raise RuntimeError('Cannot find plist file: ' + plist_info)
 
-            self.__plist_data = self.__parse_file(plist_info)
+            self.__plist_info_format, self.__plist_data = self.__parse_file(plist_info)
 
 
     def __str__(
         self
     ):
-        return plistlib.dumps(
+        return _plistlib.dumps(
             self.__plist_data,
             sort_keys=False
         ).decode()
@@ -114,10 +124,10 @@ class PlistHelper:
     def __repr__(
         self
     ):
-        if self.__plist_info_type == self.__INFO_TYPE_FILE:
+        if self.__plist_info_type == self.PLIST_INFO_TYPE_FILE:
             return 'Plist("' + self.__plist_info + '")'
 
-        if self.__plist_info_type == self.__INFO_TYPE_REPRESENTATION:
+        if self.__plist_info_type == self.PLIST_INFO_TYPE_REPRESENTATION:
             return 'Plist(' + repr(self.__plist_info) + ')'
 
         return None
@@ -140,7 +150,7 @@ class PlistHelper:
 
 
     @classmethod
-    def __get_file_format(
+    def __get_file_format_from_name(
         cls,
         file_format: str
     ):
@@ -150,18 +160,12 @@ class PlistHelper:
         TODO
         """
 
-        result = [
-            item for item in cls.FILE_FORMATS
-            if item['name'].lower() == file_format.lower()
-        ]
-        num_results = len(result)
+        try:
+            result = cls.FILE_FORMATS[file_format.lower()]
+        except KeyError as e:
+            raise ValueError('Invalid file format specified: "' + file_format + '"') from e
 
-        if num_results == 0:
-            raise ValueError('Invalid file format specified: "' + file_format + '"')
-        if num_results > 1:
-            raise OverflowError('File formats has duplicate names, developer action required')
-
-        return result[0]
+        return result
 
 
     @classmethod
@@ -175,18 +179,12 @@ class PlistHelper:
         TODO
         """
 
-        result = [
-            item for item in cls.ENTRY_DATA_TYPES
-            if item['name'].lower() == data_type_name.lower()
-        ]
-        num_results = len(result)
+        try:
+            result = cls.ENTRY_DATA_TYPES[data_type_name.lower()]
+        except KeyError as e:
+            raise ValueError('Invalid entry data type specified: "' + data_type_name + '"') from e
 
-        if num_results == 0:
-            raise ValueError('Invalid entry data type specified: "' + data_type_name + '"')
-        if num_results > 1:
-            raise OverflowError('Entry data types has duplicate names, developer action required')
-
-        return result[0]
+        return result
 
 
     @classmethod
@@ -201,8 +199,8 @@ class PlistHelper:
         """
 
         result = [
-            item for item in cls.ENTRY_DATA_TYPES
-            if isinstance(data, (item['class'], tuple(item['otherClasses'])))
+            spec for spec in cls.ENTRY_DATA_TYPES.values()
+            if isinstance(data, (spec['class'], tuple(spec['otherClasses'])))
         ]
         num_results = len(result)
 
@@ -216,9 +214,10 @@ class PlistHelper:
         return result[0]
 
 
-    @staticmethod
-    def __parse_bytestring(
-        plist_bytestring: bytes
+    @classmethod
+    def __parse_bytes(
+        cls,
+        plist_bytes: bytes | bytearray,
     ):
         """
         Get the parsed plist bytestring data.
@@ -226,21 +225,33 @@ class PlistHelper:
         TODO
         """
 
-        if not isinstance(plist_bytestring, (bytes, bytearray)):
-            raise TypeError(
-                'Invalid type for plist_bytestring, expected bytes, got '
-                + type(plist_bytestring).__name__
-            )
+        try:
+            fp = _BytesIO(plist_bytes)
+        except Exception as e:
+            raise RuntimeError('Unable to load bytes-like object') from e
 
         try:
-            return plistlib.loads(plist_bytestring)
+            # Attempt to parse the converted bytes
+            plist = _plistlib.load(fp)
+
+            # Bytes loaded okay, so determine if it was BINARY or XML
+            fp.seek(0)
+            header = fp.read(32)
+
+            if header[:8] == b'bplist00':
+                fmt = cls.__get_file_format_from_name('binary')
+            else:
+                fmt = cls.__get_file_format_from_name('xml')
         except Exception as e:
             raise ValueError('Unable to parse provided plist') from e
 
+        return fmt, plist
 
-    @staticmethod
+
+    @classmethod
     def __parse_file(
-        plist_file: str
+        cls,
+        plist_file: str,
     ):
         """
         Get the parsed plist file data.
@@ -256,12 +267,23 @@ class PlistHelper:
 
         try:
             with open(plist_file, 'rb') as fp:
-                return plistlib.load(fp)
+                # Load the file with plistlib and make sure it loads okay
+                plist = _plistlib.load(fp)
+
+                # File loads okay, so determine if it was BINARY or XML
+                fp.seek(0)
+                header = fp.read(32)
+
+                if header[:8] == b'bplist00':
+                    fmt = cls.__get_file_format_from_name('binary')
+                else:
+                    fmt = cls.__get_file_format_from_name('xml')
         except OSError as e:
             raise ValueError('Unable to open provided file') from e
         except Exception as e:
             raise ValueError('Unable to parse provided plist') from e
 
+        return fmt, plist
 
     @staticmethod
     def __normalize_path(
@@ -301,8 +323,8 @@ class PlistHelper:
     def create_empty_file(
         cls,
         plist_file: str,
-        output_file_format: str = 'xml',
-        root_entry_data_type: str = 'dict'
+        output_format: str = 'xml',
+        data_type: str = 'dict'
     ):
         """
         Create a new, valid plist file with an empty root entry.
@@ -310,8 +332,8 @@ class PlistHelper:
         TODO
         """
 
-        file_format_spec = cls.__get_file_format(output_file_format)
-        entry_data_type_spec = cls.__get_entry_data_type_by_name(root_entry_data_type)
+        file_format_spec = cls.__get_file_format_from_name(output_format)
+        entry_data_type_spec = cls.__get_entry_data_type_by_name(data_type)
 
         if entry_data_type_spec['name'] not in ('bool', 'date', 'integer', 'real'):
             empty_value = entry_data_type_spec['class']()
@@ -322,30 +344,67 @@ class PlistHelper:
             )
 
         with open(plist_file, 'xb') as fp:
-            plistlib.dump(empty_value, fp, fmt=file_format_spec['type'])
+            _plistlib.dump(empty_value, fp, fmt=file_format_spec['type'])
 
+
+    @classmethod
+    def convert_bytes(
+        cls,
+        plist_bytes: bytes | bytearray,
+        output_format: str = 'xml',
+    ):
+        """
+        Convert a given plist representation to the specified format.
+
+        TODO
+        """
+
+        file_format_spec = cls.__get_file_format_from_name(output_format)
+
+        plist_format, plist_data = cls.__parse_bytes(plist_bytes)
+
+        if plist_format != output_format:
+            plist = _plistlib.dumps(plist_data, fmt=file_format_spec['type'], sort_keys=False)
+        else:
+            plist = plist_bytes
+
+        return plist
 
     @classmethod
     def convert_file(
         cls,
         plist_file: str,
-        converted_file_format: str = 'xml'
+        output_format: str = 'xml',
     ):
         """
-        Convert a given plist to the specified format.
+        Convert a given plist file to the specified format.
 
         TODO
         """
-        file_format_spec = cls.__get_file_format(converted_file_format)
 
-        plist_data = cls.__parse_file(plist_file)
+        file_format_spec = cls.__get_file_format_from_name(output_format)
 
-        with open(plist_file, 'wb') as fp:
-            plistlib.dump(plist_data, fp, fmt=file_format_spec['type'], sort_keys=False)
+        plist_format, plist_data = cls.__parse_file(plist_file)
+
+        if plist_format != output_format:
+            with open(plist_file, 'wb') as fp:
+                _plistlib.dump(plist_data, fp, fmt=file_format_spec['type'], sort_keys=False)
+
+
+    def get_plist_info_format(
+        self,
+    ):
+        """
+        Get the format of the parsed plist_info used to instantiate the class.
+
+        TODO
+        """
+
+        return self.__plist_info_format
 
 
     def get_plist_info(
-        self
+        self,
     ):
         """
         Get the plist_info used to instantiate the class.
@@ -511,7 +570,7 @@ class PlistHelper:
         path: list | tuple | str | int = None
     ):
         """
-        Get the length of the specified array entry
+        Get the length of the specified array entry.
 
         TODO
         """
@@ -535,8 +594,8 @@ class PlistHelper:
         path: list | tuple | str | int = None
     ):
         """
-        Print the plist to the screen formatted in the specified format and
-        starting at the specified entry
+        Print the plist to the screen formatted in the specified format \
+        starting at the specified entry.
 
         TODO
         """
@@ -552,7 +611,7 @@ class PlistHelper:
         if output_format is None:
             output_format = 'xml'
 
-        file_format_spec = self.__get_file_format(output_format)
+        file_format_spec = self.__get_file_format_from_name(output_format)
 
         plist_data = None
         if path is None:
@@ -560,7 +619,7 @@ class PlistHelper:
         else:
             plist_data = self.__get(self.__plist_data, path)
 
-        output = plistlib.dumps(
+        output = _plistlib.dumps(
             plist_data,
             fmt=file_format_spec['type'],
             sort_keys=output_sort
@@ -575,7 +634,7 @@ class PlistHelper:
     def write(
         self,
         output_file: str = None,
-        output_format: str = 'xml',
+        output_format: str = None,
         output_sort: bool = False,
         path: list | tuple | str | int = None
     ):
@@ -585,7 +644,10 @@ class PlistHelper:
         The entire plist will be written to the file unless a path value is
         provided, then that entry down will be used to create the plist file.
 
-        If no output file is given, this will write to the file used to instantiate
+        If no output_format is given, then the file will be written in the format
+        from which the plist was originally parsed.
+
+        If no output_file is given, this will write to the file used to instantiate
         this object. If a plist representation was used to instantiate this object,
         then a RuntimeError is thrown.
 
@@ -600,14 +662,17 @@ class PlistHelper:
             )
 
         if output_file is None:
-            if self.__plist_info_type == self.__INFO_TYPE_FILE:
+            if self.__plist_info_type == self.PLIST_INFO_TYPE_FILE:
                 output_file = self.__plist_info
-            elif self.__plist_info_type == self.__INFO_TYPE_REPRESENTATION:
+            elif self.__plist_info_type == self.PLIST_INFO_TYPE_REPRESENTATION:
                 raise RuntimeError(
                     'Object instantiated from plist representation, value for output_file required'
                 )
 
-        file_format_spec = self.__get_file_format(output_format)
+        if output_format is None:
+            file_format_spec = self.__plist_info_format
+        else:
+            file_format_spec = self.__get_file_format_from_name(output_format)
 
         path = self.__normalize_path(path)
 
@@ -620,8 +685,8 @@ class PlistHelper:
         # Use a temporary file in case there is any issue converting the data.
         # This prevents the target file from being in a bad state if
         # the plist conversion fails
-        with tempfile.NamedTemporaryFile() as tmp:
-            plistlib.dump(plist_data, tmp, fmt=file_format_spec['type'], sort_keys=output_sort)
+        with _tempfile.NamedTemporaryFile() as tmp:
+            _plistlib.dump(plist_data, tmp, fmt=file_format_spec['type'], sort_keys=output_sort)
 
             with open(output_file, 'wb') as fp:
                 # Reset temporary file's read/write position to beginning of file
@@ -686,7 +751,7 @@ class PlistHelper:
 
         try:
             # Have plistlib process the value to see if it is valid
-            plistlib.dumps(value)
+            _plistlib.dumps(value)
         except Exception as e:
             raise TypeError('Value to insert is not valid plist data') from e
 
@@ -780,7 +845,7 @@ class PlistHelper:
 
         try:
             # Have plistlib process the value to see if it is valid
-            plistlib.dumps(value)
+            _plistlib.dumps(value)
         except Exception as e:
             raise TypeError('Value to update to is not valid plist data') from e
 
@@ -807,7 +872,7 @@ class PlistHelper:
         path: list | tuple | str | int
     ):
         """
-        Delete an entry from a plist
+        Delete an entry from a plist.
 
         TODO
         """
@@ -952,6 +1017,7 @@ class PlistHelper:
 
     def merge(
         self,
+        source_plist_info_type: str,
         source_plist_info: str | bytes | bytearray,
         source_path: list | tuple | str | int = None,
         target_path: list | tuple | str | int = None,
@@ -974,15 +1040,18 @@ class PlistHelper:
                 + type(overwrite).__name__
             )
 
-        if isinstance(source_plist_info, (bytes, bytearray)):
-            source_plist = self.__parse_bytestring(source_plist_info)
-        elif isinstance(source_plist_info, str):
-            source_plist = self.__parse_file(source_plist_info)
+        if source_plist_info_type not in self.__PLIST_INFO_TYPES:
+            raise RuntimeError(
+                'Invalid source_plist_info_type: "' + str(source_plist_info_type) + '"'
+            )
+
+        if source_plist_info_type == self.PLIST_INFO_TYPE_REPRESENTATION:
+            _, source_plist = self.__parse_bytes(source_plist_info)
+        elif source_plist_info_type == self.PLIST_INFO_TYPE_FILE:
+            _, source_plist = self.__parse_file(source_plist_info)
         else:
-            raise TypeError(
-                'Invalid source_plist_info type.' + ' '
-                + 'Execpted string (str), bytestring (bytes), or bytearray, got '
-                + type(source_plist_info).__name__
+            raise NameError(
+                'JML Invalid source_plist_info_type: "' + str(source_plist_info_type) + '"'
             )
 
         source_path = self.__normalize_path(source_path)

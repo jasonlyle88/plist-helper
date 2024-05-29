@@ -1,0 +1,21 @@
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+# Not currently used by Poetry
+[project.scripts]
+plistHelper = "plist_helper.__main__:main"
+
+[tool.poetry]
+name = "plist-helper"
+version = "0.1.0"
+description = "Sensible management of Apple plist files"
+authors = ["Jason Lyle <jason.lyle88@gmail.com>"]
+license = "LICENSE"
+readme = "README.md"
+
+[tool.poetry.scripts]
+plistHelper = "plist_helper.__main__:main"
+
+[tool.poetry.dependencies]
+python = "^3.12"
