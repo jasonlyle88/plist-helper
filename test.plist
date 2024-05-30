@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>jmlstring</key>
+	<string>foo</string>
+	<key>jmldict</key>
+	<dict>
+		<key>one</key>
+		<string>uno</string>
+		<key>two</key>
+		<string>dos</string>
+		<key>three</key>
+		<string>tres</string>
+		<key>four</key>
+		<string>quatro</string>
+		<key>five</key>
+		<string>cinco</string>
+	</dict>
+	<key>jmlarray</key>
+	<array>
+		<string>foo</string>
+		<string>bar</string>
+		<string>baz</string>
+	</array>
+	<key>jmlinteger</key>
+	<integer>123</integer>
+	<key>jmlnewstring</key>
+	<string>hello from the CLI!</string>
+	<key>jmlnewinteger</key>
+	<string>123456789</string>
+	<key>jmlnewinteger2</key>
+	<integer>123456789</integer>
+	<key>jmlnewinteger3</key>
+	<real>123456789.0</real>
+</dict>
+</plist>

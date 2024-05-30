@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>jmlstring</key>
+    <string>bar</string>
+    <key>jmldict</key>
+    <dict>
+        <key>zero</key>
+        <array>
+            <string>cero</string>
+        </array>
+        <key>one</key>
+        <dict>
+            <key>sp</key>
+            <string>uno</string>
+            <key>fr</key>
+            <string>un</string>
+        </dict>
+    </dict>
+    <key>jmlarray</key>
+    <array>
+        <string>foo</string>
+        <string>bar?</string>
+        <string>baz</string>
+        <string>foobar</string>
+        <string>barbaz</string>
+        <string>foobaz</string>
+        <string>foobarbaz</string>
+    </array>
+    <key>jmlnew</key>
+    <string>something new to add</string>
+</dict>
+</plist>
