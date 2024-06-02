@@ -181,7 +181,9 @@ def _f() -> None:
 
 
 __TYPES = _argparse.Namespace(
-    function=type(_f), classmethod=classmethod, staticmethod=staticmethod,
+    function=type(_f),
+    classmethod=classmethod,
+    staticmethod=staticmethod,
 )
 
 
@@ -252,19 +254,22 @@ def __setup_argparse() -> _argparse.ArgumentParser:
         if action_help is None:
             # Use the first line of the docstring as the default CLI action help
             action_help = _textwrap.dedent(action["main_method"].__doc__.strip()).split(
-                "\n", 1,
+                "\n",
+                1,
             )[0]
 
         add_parser = child_parser.add_parser(action_name, help=action_help)
 
         for global_argument in __GLOBAL_ARGUMENTS:
             add_parser.add_argument(
-                *(global_argument["args"]), **(global_argument["kwargs"]),
+                *(global_argument["args"]),
+                **(global_argument["kwargs"]),
             )
 
         for argument_definition in action["argument_definitions"]:
             add_parser.add_argument(
-                *argument_definition["args"], **argument_definition["kwargs"],
+                *argument_definition["args"],
+                **argument_definition["kwargs"],
             )
 
     return parent_parser

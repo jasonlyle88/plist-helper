@@ -297,7 +297,10 @@ class PlistHelper:
 
     @classmethod
     def create_empty_file(
-        cls, plist_file: str, output_format: str = "xml", data_type: str = "dict",
+        cls,
+        plist_file: str,
+        output_format: str = "xml",
+        data_type: str = "dict",
     ) -> None:
         """Create a new, valid plist file with an empty root entry.
 
@@ -334,7 +337,9 @@ class PlistHelper:
 
         if plist_format != output_format:
             plist = _plistlib.dumps(
-                plist_data, fmt=file_format_spec["type"], sort_keys=False,
+                plist_data,
+                fmt=file_format_spec["type"],
+                sort_keys=False,
             )
         else:
             plist = plist_bytes
@@ -358,7 +363,10 @@ class PlistHelper:
         if plist_format != output_format:
             with open(plist_file, "wb") as fp:
                 _plistlib.dump(
-                    plist_data, fp, fmt=file_format_spec["type"], sort_keys=False,
+                    plist_data,
+                    fp,
+                    fmt=file_format_spec["type"],
+                    sort_keys=False,
                 )
 
     def get_plist_info_format(
@@ -540,7 +548,9 @@ class PlistHelper:
             plist_data = self.__get(self.__plist_data, path)
 
         output = _plistlib.dumps(
-            plist_data, fmt=file_format_spec["type"], sort_keys=output_sort,
+            plist_data,
+            fmt=file_format_spec["type"],
+            sort_keys=output_sort,
         )
 
         if output_format == "xml":
@@ -601,7 +611,10 @@ class PlistHelper:
         # the plist conversion fails
         with _tempfile.NamedTemporaryFile() as tmp:
             _plistlib.dump(
-                plist_data, tmp, fmt=file_format_spec["type"], sort_keys=output_sort,
+                plist_data,
+                tmp,
+                fmt=file_format_spec["type"],
+                sort_keys=output_sort,
             )
 
             with open(output_file, "wb") as fp:
@@ -813,7 +826,10 @@ class PlistHelper:
             self.update(path, value)
 
     def __merge(
-        self, source_entry, target_path: list | tuple | str | int, overwrite: bool,
+        self,
+        source_entry,
+        target_path: list | tuple | str | int,
+        overwrite: bool,
     ):
         """Recursively merge python data (source_entry) into the current plist.
 
