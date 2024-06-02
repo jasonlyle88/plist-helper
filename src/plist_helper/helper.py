@@ -136,17 +136,6 @@ class PlistHelper:
 
         return None
 
-    @staticmethod
-    def __get_variable_value_copy(var: _typing.Any) -> _typing.Any:
-        """Get a copy of a variable as a value copy, not a reference copy.
-
-        TODO(@jlyle)
-        """
-        if hasattr(var, "copy"):
-            return var.copy()
-
-        return var
-
     @classmethod
     def __get_file_format_from_name(cls, file_format: str) -> _MappingProxyType:
         """Get a plist file format specification based on the provided  file format name.
@@ -395,7 +384,11 @@ class PlistHelper:
 
         TODO(@jlyle)
         """
-        return self.__get_variable_value_copy(self.__plist_data)
+        data = self.__plist_data.copy()
+        if hasattr(self.__plist_data, "copy"):
+            data = data.copy()
+
+        return data
 
     def is_valid(self) -> bool:
         """Check if a plist file is a valid plist.
@@ -420,7 +413,9 @@ class PlistHelper:
 
     @classmethod
     def __get(
-        cls, plist_data: dict | list | bool | bytes | int | float | str, path: list
+        cls,
+        plist_data: dict | list | bool | bytes | int | float | str,
+        path: list,
     ) -> dict | list | bool | bytes | int | float | str:
         """Get the python data representation of a plist entry.
 
@@ -466,7 +461,8 @@ class PlistHelper:
         return entry
 
     def get(
-        self, path: list | tuple | str | int | None = None
+        self,
+        path: list | tuple | str | int | None = None,
     ) -> dict | list | bool | bytes | int | float | str:
         """Get the python data representation of a plist entry.
 
@@ -476,7 +472,10 @@ class PlistHelper:
 
         entry = self.__get(self.__plist_data, path)
 
-        return self.__get_variable_value_copy(entry)
+        if hasattr(entry, "copy"):
+            entry = entry.copy()
+
+        return entry
 
     def get_type(self, path: list | tuple | str | int | None = None) -> str:
         """Get the plist type of the entry.
@@ -939,8 +938,7 @@ class PlistHelper:
 
     def merge(
         self,
-        source_plist_info_type: str,
-        source_plist_info: str | bytes | bytearray,
+        source_plist_helper: PlistHelper,
         source_path: list | tuple | str | int | None = None,
         target_path: list | tuple | str | int | None = None,
         overwrite: bool = True,
@@ -959,26 +957,10 @@ class PlistHelper:
                 + type(overwrite).__name__,
             )
 
-        if source_plist_info_type not in self.__PLIST_INFO_TYPES:
-            raise RuntimeError(
-                'Invalid source_plist_info_type: "' + str(source_plist_info_type) + '"',
-            )
-
-        if source_plist_info_type == self.PLIST_INFO_TYPE_REPRESENTATION:
-            _, source_plist = self.__parse_bytes(source_plist_info)
-        elif source_plist_info_type == self.PLIST_INFO_TYPE_FILE:
-            _, source_plist = self.__parse_file(source_plist_info)
-        else:
-            raise NameError(
-                'JML Invalid source_plist_info_type: "'
-                + str(source_plist_info_type)
-                + '"',
-            )
-
         source_path = self.__normalize_path(source_path)
 
         try:
-            source_entry = self.__get(source_plist, source_path)
+            source_entry = source_plist_helper.get(source_path)
         except Exception as e:
             raise RuntimeError("Invalid source_path") from e
 
