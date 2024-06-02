@@ -5,6 +5,7 @@ from __future__ import annotations
 import datetime as _datetime
 import os.path as _os_path
 import plistlib as _plistlib
+import sys as _sys
 import tempfile as _tempfile
 import typing as _typing
 from io import BytesIO as _BytesIO
@@ -380,14 +381,14 @@ class PlistHelper:
 
     def get_plist_info(
         self,
-    ):
+    ) -> str | bytes | bytearray:
         """Get the plist_info used to instantiate the class.
 
         TODO(@jlyle)
         """
         return self.__plist_info
 
-    def get_data(self):
+    def get_data(self) -> dict | list | bool | bytes | int | float | str:
         """Get the parsed plist data.
 
         Will return None if unable to parse the file.
@@ -396,14 +397,14 @@ class PlistHelper:
         """
         return self.__get_variable_value_copy(self.__plist_data)
 
-    def is_valid(self):
+    def is_valid(self) -> bool:
         """Check if a plist file is a valid plist.
 
         TODO(@jlyle)
         """
         return self.__plist_data is not None
 
-    def exists(self, path: list | tuple | str | int):
+    def exists(self, path: list | tuple | str | int) -> bool:
         """Check if an entry exists.
 
         TODO(@jlyle)
@@ -418,7 +419,7 @@ class PlistHelper:
         return True
 
     @classmethod
-    def __get(cls, plist_data, path: list):
+    def __get(cls, plist_data: dict | list | bool | bytes | int | float | str, path: list) -> dict | list | bool | bytes | int | float | str:
         """Get the python data representation of a plist entry.
 
         TODO(@jlyle)
@@ -462,7 +463,7 @@ class PlistHelper:
 
         return entry
 
-    def get(self, path: list | tuple | str | int | None = None):
+    def get(self, path: list | tuple | str | int | None = None) -> dict | list | bool | bytes | int | float | str:
         """Get the python data representation of a plist entry.
 
         TODO(@jlyle)
@@ -473,7 +474,7 @@ class PlistHelper:
 
         return self.__get_variable_value_copy(entry)
 
-    def get_type(self, path: list | tuple | str | int | None = None):
+    def get_type(self, path: list | tuple | str | int | None = None) -> str:
         """Get the plist type of the entry.
 
         TODO(@jlyle)
@@ -486,7 +487,7 @@ class PlistHelper:
 
         return entry_data_type_spec["name"]
 
-    def get_dict_keys(self, path: list | tuple | str | int | None = None):
+    def get_dict_keys(self, path: list | tuple | str | int | None = None) -> tuple:
         """Get the keys of the specified dict entry.
 
         TODO(@jlyle)
@@ -502,7 +503,7 @@ class PlistHelper:
 
         return tuple(entry.keys())
 
-    def get_array_length(self, path: list | tuple | str | int | None = None):
+    def get_array_length(self, path: list | tuple | str | int | None = None) -> int:
         """Get the length of the specified array entry.
 
         TODO(@jlyle)
@@ -523,7 +524,7 @@ class PlistHelper:
         output_format: str = "xml",
         output_sort: bool = False,
         path: list | tuple | str | int | None = None,
-    ):
+    ) -> None:
         """Print the plist to the screen formatted in the specified format starting at the specified entry.
 
         TODO(@jlyle)
@@ -556,7 +557,7 @@ class PlistHelper:
         if output_format == "xml":
             output = output.decode()
 
-        print(output)
+        _sys.stdout.write(str(output) + "\n")
 
     def write(
         self,
@@ -564,7 +565,7 @@ class PlistHelper:
         output_format: str | None = None,
         output_sort: bool | None = False,
         path: list | tuple | str | int | None = None,
-    ):
+    ) -> None:
         """Write the plist to the specified file.
 
         The entire plist will be written to the file unless a path value is
@@ -622,7 +623,7 @@ class PlistHelper:
                 tmp.seek(0)
                 fp.write(tmp.read())
 
-    def insert(self, path: list | tuple | str | int, value):
+    def insert(self, path: list | tuple | str | int, value: dict | list | bool | bytes | int | float | str) -> None:
         """Insert a new entry into the plist.
 
         TODO(@jlyle)
@@ -686,7 +687,7 @@ class PlistHelper:
         elif parent_entry_data_type_spec["name"] == "dict":
             parent_entry[insertion_key] = value
 
-    def insert_array_append(self, path: list | tuple | str | int, value):
+    def insert_array_append(self, path: list | tuple | str | int, value: dict | list | bool | bytes | int | float | str) -> None:
         """Insert a value into an array by appending it to the end of the array.
 
         If the path specified does not exist, an empty array will attempt to be
@@ -731,7 +732,7 @@ class PlistHelper:
 
             raise
 
-    def update(self, path: list | tuple | str | int, value):
+    def update(self, path: list | tuple | str | int, value: dict | list | bool | bytes | int | float | str) -> None:
         """Update an existing entry in the plist.
 
         Updates are allowed to change the data type of the entry.
@@ -780,7 +781,7 @@ class PlistHelper:
 
             parent_entry[update_key] = value
 
-    def delete(self, path: list | tuple | str | int):
+    def delete(self, path: list | tuple | str | int) -> None:
         """Delete an entry from a plist.
 
         TODO(@jlyle)
@@ -813,7 +814,7 @@ class PlistHelper:
 
         del parent_entry[delete_key]
 
-    def upsert(self, path: list | tuple | str | int, value):
+    def upsert(self, path: list | tuple | str | int, value: dict | list | bool | bytes | int | float | str) -> None:
         """Insert or update a plist entry depending on if the entry specified by the path already exists or not.
 
         TODO(@jlyle)
@@ -827,10 +828,10 @@ class PlistHelper:
 
     def __merge(
         self,
-        source_entry,
+        source_entry: dict | list | bool | bytes | int | float | str,
         target_path: list | tuple | str | int,
         overwrite: bool,
-    ):
+    ) -> None:
         """Recursively merge python data (source_entry) into the current plist.
 
         TODO(@jlyle)

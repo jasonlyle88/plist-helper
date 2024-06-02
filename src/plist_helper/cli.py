@@ -379,7 +379,7 @@ def __handle_arguments(args: _argparse.Namespace) -> None:
         pass
     elif action_spec["main_method_post"] == "output_list":
         for entry in result:
-            print(entry)
+            _sys.stdout.write(str(entry) + "\n")
     elif action_spec["main_method_post"] == "output_result":
         if isinstance(result, bool):
             # return inverse int because false = 0 but 0 is successful exit code
@@ -389,7 +389,7 @@ def __handle_arguments(args: _argparse.Namespace) -> None:
                 "Cannot print collection values",
             )  # TODO(@jlyle): Generic error handling needs to be done here
         else:
-            print(result)
+            _sys.stdout.write(str(result) + "\n")
     elif action_spec["main_method_post"] == "write_to_file":
         plist.write()
 
