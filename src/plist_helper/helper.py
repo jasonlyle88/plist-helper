@@ -6,10 +6,10 @@ tempfile:   Used to manage temporary files for the operating systems.
 """
 
 import datetime as _datetime
-from io import BytesIO as _BytesIO
 import os.path as _os_path
 import plistlib as _plistlib
 import tempfile as _tempfile
+from io import BytesIO as _BytesIO
 
 
 class PlistHelper:

@@ -2,8 +2,8 @@
 Initialize module
 """
 
-from plist_helper.helper import PlistHelper
 from plist_helper import cli
+from plist_helper.helper import PlistHelper
 
 INFO_TYPE_FILE = PlistHelper.PLIST_INFO_TYPE_FILE
 INFO_TYPE_REPRESENTATION = PlistHelper.PLIST_INFO_TYPE_REPRESENTATION
