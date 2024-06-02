@@ -2,9 +2,8 @@
 
 # python src/plist_helper -h
 
-from src.plist_helper import *
-
 # from plist_helper import *
+from plist_helper import PlistHelper
 
 pl = PlistHelper("test.plist")
 # pl.insert_entry(['jmlinsert1'], 'foooo')
