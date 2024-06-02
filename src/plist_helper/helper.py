@@ -419,7 +419,9 @@ class PlistHelper:
         return True
 
     @classmethod
-    def __get(cls, plist_data: dict | list | bool | bytes | int | float | str, path: list) -> dict | list | bool | bytes | int | float | str:
+    def __get(
+        cls, plist_data: dict | list | bool | bytes | int | float | str, path: list
+    ) -> dict | list | bool | bytes | int | float | str:
         """Get the python data representation of a plist entry.
 
         TODO(@jlyle)
@@ -463,7 +465,9 @@ class PlistHelper:
 
         return entry
 
-    def get(self, path: list | tuple | str | int | None = None) -> dict | list | bool | bytes | int | float | str:
+    def get(
+        self, path: list | tuple | str | int | None = None
+    ) -> dict | list | bool | bytes | int | float | str:
         """Get the python data representation of a plist entry.
 
         TODO(@jlyle)
@@ -623,7 +627,11 @@ class PlistHelper:
                 tmp.seek(0)
                 fp.write(tmp.read())
 
-    def insert(self, path: list | tuple | str | int, value: dict | list | bool | bytes | int | float | str) -> None:
+    def insert(
+        self,
+        path: list | tuple | str | int,
+        value: dict | list | bool | bytes | int | float | str,
+    ) -> None:
         """Insert a new entry into the plist.
 
         TODO(@jlyle)
@@ -687,7 +695,11 @@ class PlistHelper:
         elif parent_entry_data_type_spec["name"] == "dict":
             parent_entry[insertion_key] = value
 
-    def insert_array_append(self, path: list | tuple | str | int, value: dict | list | bool | bytes | int | float | str) -> None:
+    def insert_array_append(
+        self,
+        path: list | tuple | str | int,
+        value: dict | list | bool | bytes | int | float | str,
+    ) -> None:
         """Insert a value into an array by appending it to the end of the array.
 
         If the path specified does not exist, an empty array will attempt to be
@@ -732,7 +744,11 @@ class PlistHelper:
 
             raise
 
-    def update(self, path: list | tuple | str | int, value: dict | list | bool | bytes | int | float | str) -> None:
+    def update(
+        self,
+        path: list | tuple | str | int,
+        value: dict | list | bool | bytes | int | float | str,
+    ) -> None:
         """Update an existing entry in the plist.
 
         Updates are allowed to change the data type of the entry.
@@ -814,7 +830,11 @@ class PlistHelper:
 
         del parent_entry[delete_key]
 
-    def upsert(self, path: list | tuple | str | int, value: dict | list | bool | bytes | int | float | str) -> None:
+    def upsert(
+        self,
+        path: list | tuple | str | int,
+        value: dict | list | bool | bytes | int | float | str,
+    ) -> None:
         """Insert or update a plist entry depending on if the entry specified by the path already exists or not.
 
         TODO(@jlyle)
