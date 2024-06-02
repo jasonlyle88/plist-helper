@@ -1,11 +1,13 @@
-"""
-Command line interface for PlistHelper to provide more universal access to plist management.
-"""
+"""Command line interface for PlistHelper to provide more universal access to plist management."""
+
+from __future__ import annotations
 
 import argparse as _argparse
+import contextlib as _contextlib
 import datetime as _datetime
 import sys as _sys
 import textwrap as _textwrap
+import typing as _typing
 
 from plist_helper.helper import PlistHelper as _PlistHelper
 
@@ -84,9 +86,6 @@ __ALL_ARGUMENTS = {
 
 __GLOBAL_ARGUMENTS = (__ALL_ARGUMENTS["plist"],)
 
-# TODO: Update type hints to use Union (to allow for more backward compatability):
-# TODO: https://www.pythontutorial.net/python-basics/python-type-hints/
-
 # DONE: convertFile
 # DONE: createFile
 # DONE: delete
@@ -95,12 +94,12 @@ __GLOBAL_ARGUMENTS = (__ALL_ARGUMENTS["plist"],)
 # DONE: getDictKeys
 # DONE: getType
 # DONE: getValue
-# TODO: insert - CLI setup, need to test everything here
-# TODO: insertArrayAppend
-# TODO: merge
+# TODO(@jlyle): insert - CLI setup, need to test everything here
+# TODO(@jlyle): insertArrayAppend
+# TODO(@jlyle): merge
 # DONE: print
-# TODO: update
-# TODO: upsert
+# TODO(@jlyle): update
+# TODO(@jlyle): upsert
 
 __ACTIONS = {
     "convertFile": {
@@ -177,40 +176,32 @@ __ACTIONS = {
 }
 
 
-def _f():
+def _f() -> None:
     pass
 
 
 __TYPES = _argparse.Namespace(
-    function=type(_f), classmethod=classmethod, staticmethod=staticmethod
+    function=type(_f), classmethod=classmethod, staticmethod=staticmethod,
 )
 
 
-def __print_message(message, file):
-    """
-    Print a message to a file-like object (e.g. an IO stream).
-    """
-
+def __print_message(message: str, file: _typing.TextIO) -> None:
+    """Print a message to a file-like object (e.g. an IO stream)."""
     if message:
         file = file or _sys.stdout
-        try:
+
+        with _contextlib.suppress(AttributeError, OSError):
             file.write(message)
-        except (AttributeError, OSError):
-            pass
 
 
-def __exit(status=0, message=None):
-    """
-    Exit with the specified system code and optionally print out a messsage.
+def __exit(status: int = 0, message: str | None = None) -> None:
+    """Exit with the specified system code and optionally print out a messsage.
 
     Will print messages to stdout if exit status = 0.
     Otherwise messages are printed to stderr.
     """
     if message:
-        if status == 0:
-            stream = _sys.stdout
-        else:
-            stream = _sys.stderr
+        stream = _sys.stdout if status == 0 else _sys.stderr
 
         __print_message(message, stream)
     _sys.exit(status)
@@ -227,9 +218,7 @@ def __get_class_from_method_handle(handle):
     module = _sys.modules[handle.__module__]
 
     # Retrieve the class object from the module
-    cls = getattr(module, class_name)
-
-    return cls
+    return getattr(module, class_name)
 
 
 def __get_original_descriptor_from_handle(handle):
@@ -240,11 +229,8 @@ def __get_original_descriptor_from_handle(handle):
     return None
 
 
-def __setup_argparse():
-    """
-    Setup an argparse parser to be used for the plist_helper CLI.
-    """
-
+def __setup_argparse() -> _argparse.ArgumentParser:
+    """Set up the argparse parser to be used for the plist_helper CLI."""
     parent_parser = _argparse.ArgumentParser(
         prog="plistHelper",
         formatter_class=_argparse.RawDescriptionHelpFormatter,
@@ -266,29 +252,26 @@ def __setup_argparse():
         if action_help is None:
             # Use the first line of the docstring as the default CLI action help
             action_help = _textwrap.dedent(action["main_method"].__doc__.strip()).split(
-                "\n", 1
+                "\n", 1,
             )[0]
 
         add_parser = child_parser.add_parser(action_name, help=action_help)
 
         for global_argument in __GLOBAL_ARGUMENTS:
             add_parser.add_argument(
-                *(global_argument["args"]), **(global_argument["kwargs"])
+                *(global_argument["args"]), **(global_argument["kwargs"]),
             )
 
         for argument_definition in action["argument_definitions"]:
             add_parser.add_argument(
-                *argument_definition["args"], **argument_definition["kwargs"]
+                *argument_definition["args"], **argument_definition["kwargs"],
             )
 
     return parent_parser
 
 
-def __handle_arguments(args: _argparse.Namespace):
-    """
-    Handle the arguments from argparse for the plist_helper CLI.
-    """
-
+def __handle_arguments(args: _argparse.Namespace) -> None:
+    """Handle the arguments from argparse for the plist_helper CLI."""
     # Setup a dictionary that can be used to call the main function with
     # unpacked args and kwargs
     plist_helper_args = []
@@ -320,25 +303,25 @@ def __handle_arguments(args: _argparse.Namespace):
             + '"\n',
         )
 
-    if "value_data_type" in plist_helper_kwargs.keys():
+    if "value_data_type" in plist_helper_kwargs:
         # Verify parameter combinations
-        value_specified = "value" in plist_helper_kwargs.keys()
+        value_specified = "value" in plist_helper_kwargs
 
         if (
             plist_helper_kwargs["value_data_type"] in ["array", "dict"]
             and value_specified
         ):
             raise RuntimeError(
-                "Cannot provide a value when data type is array or dict"
-            )  # TODO: Generic error handling needs to be done here
+                "Cannot provide a value when data type is array or dict",
+            )  # TODO(@jlyle): Generic error handling needs to be done here
 
         if (
             plist_helper_kwargs["value_data_type"] not in ["array", "dict"]
             and not value_specified
         ):
             raise RuntimeError(
-                "A value must be provided when data type an a simple data type"
-            )  # TODO: Generic error handling needs to be done here
+                "A value must be provided when data type an a simple data type",
+            )  # TODO(@jlyle): Generic error handling needs to be done here
 
         if not value_specified:
             plist_helper_kwargs["value"] = ""
@@ -356,22 +339,22 @@ def __handle_arguments(args: _argparse.Namespace):
         elif plist_helper_kwargs["value_data_type"] == "date":
             try:
                 plist_helper_kwargs["value"] = _datetime.datetime.fromisoformat(
-                    plist_helper_kwargs["value"]
+                    plist_helper_kwargs["value"],
                 )
             except ValueError as e:
-                raise e  # TODO: Generic error handling needs to be done here
+                raise e  # TODO(@jlyle): Generic error handling needs to be done here
         if plist_helper_kwargs["value_data_type"] == "dict":
             plist_helper_kwargs["value"] = {}
         elif plist_helper_kwargs["value_data_type"] == "integer":
             try:
                 plist_helper_kwargs["value"] = int(plist_helper_kwargs["value"])
             except ValueError as e:
-                raise e  # TODO: Generic error handling needs to be done here
+                raise e  # TODO(@jlyle): Generic error handling needs to be done here
         elif plist_helper_kwargs["value_data_type"] == "real":
             try:
                 plist_helper_kwargs["value"] = float(plist_helper_kwargs["value"])
             except ValueError as e:
-                raise e  # TODO: Generic error handling needs to be done here
+                raise e  # TODO(@jlyle): Generic error handling needs to be done here
         elif plist_helper_kwargs["value_data_type"] == "string":
             pass  # Value will already be a string, nothing to do
 
@@ -385,7 +368,7 @@ def __handle_arguments(args: _argparse.Namespace):
         execution_exception = e
 
     if execution_exception is not None:
-        raise execution_exception  # TODO: Generic error handling needs to be done here
+        raise execution_exception  # TODO(@jlyle): Generic error handling needs to be done here
 
     if action_spec["main_method_post"] is None:
         pass
@@ -398,19 +381,16 @@ def __handle_arguments(args: _argparse.Namespace):
             __exit(int(not result))
         elif isinstance(result, (dict, set, tuple, list)):
             raise ValueError(
-                "Cannot print collection values"
-            )  # TODO: Generic error handling needs to be done here
+                "Cannot print collection values",
+            )  # TODO(@jlyle): Generic error handling needs to be done here
         else:
             print(result)
     elif action_spec["main_method_post"] == "write_to_file":
         plist.write()
 
 
-def main():
-    """
-    Main function for running the plistHelper command line interface.
-    """
-
+def main() -> None:
+    """Run the plistHelper command line interface."""
     parser = __setup_argparse()
 
     args = parser.parse_args()

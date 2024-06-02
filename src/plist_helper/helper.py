@@ -1,20 +1,18 @@
-"""
-datetime:   Used to work with plist date type data.
-os.path:    Used to work with os files and pathing.
-plistlib:   Provide ability to work with Apple plist files.
-tempfile:   Used to manage temporary files for the operating systems.
-"""
+"""PlistHelper definition."""
+
+from __future__ import annotations
 
 import datetime as _datetime
 import os.path as _os_path
 import plistlib as _plistlib
 import tempfile as _tempfile
+import typing as _typing
 from io import BytesIO as _BytesIO
+from types import MappingProxyType as _MappingProxyType
 
 
 class PlistHelper:
-    """
-    Sensible management of Apple plist files.
+    """Sensible management of Apple plist files.
 
     Designed to replace the need for the "PlistBuddy", "plutil", and "defaults" utilities.
 
@@ -26,13 +24,15 @@ class PlistHelper:
     It is also possible to instantiate this class with a bytestring or bytearray
     that represents the content of a plist file.
 
-    Examples:
+    Examples
+    --------
         from plist_helper import PlistHelper
         PlistHelper('/path/to/a/plist/file.plist')
         PlistHelper('relative/path/to/a/plist/file.plist')
         PlistHelper(b'<plist><dict><key>hello</key><string>world!</string></dict></plist>')
 
-    NOTES:
+    Notes
+    -----
         This class, as well as the underlying plistlib, is unable to handle plist files
         that contain empty 'bool', 'date', 'integer', or 'real' data entries.
 
@@ -42,7 +42,8 @@ class PlistHelper:
         For this reason, it is recommended to always represent plist arrays as python
         lists instead of tuples.
 
-    TODO
+    TODO(@jlyle)
+
     """
 
     PLIST_INFO_TYPE_FILE = "file"
@@ -59,29 +60,33 @@ class PlistHelper:
     otherClasses:   Other data type classes that can be used when converting
                     python data to a plist.
     """
-    ENTRY_DATA_TYPES = {
-        "array": {"class": list, "otherClasses": [tuple]},
-        "bool": {"class": bool, "otherClasses": []},
-        "data": {"class": bytes, "otherClasses": [bytearray]},
-        "date": {"class": _datetime.datetime, "otherClasses": []},
-        "dict": {"class": dict, "otherClasses": []},
-        "integer": {"class": int, "otherClasses": []},
-        "real": {"class": float, "otherClasses": []},
-        "string": {"class": str, "otherClasses": []},
-    }
+    ENTRY_DATA_TYPES = _MappingProxyType(
+        {
+            "array": {"class": list, "otherClasses": [tuple]},
+            "bool": {"class": bool, "otherClasses": []},
+            "data": {"class": bytes, "otherClasses": [bytearray]},
+            "date": {"class": _datetime.datetime, "otherClasses": []},
+            "dict": {"class": dict, "otherClasses": []},
+            "integer": {"class": int, "otherClasses": []},
+            "real": {"class": float, "otherClasses": []},
+            "string": {"class": str, "otherClasses": []},
+        },
+    )
 
     for key, value in ENTRY_DATA_TYPES.items():
         value["name"] = key
 
     # pylint: disable=no-member
-    FILE_FORMATS = {
-        "binary": {
-            "type": _plistlib.FMT_BINARY,
+    FILE_FORMATS = _MappingProxyType(
+        {
+            "binary": {
+                "type": _plistlib.FMT_BINARY,
+            },
+            "xml": {
+                "type": _plistlib.FMT_XML,
+            },
         },
-        "xml": {
-            "type": _plistlib.FMT_XML,
-        },
-    }
+    )
     # pylint: enable=no-member
 
     for key, value in FILE_FORMATS.items():
@@ -91,7 +96,8 @@ class PlistHelper:
         self,
         plist_info_type: str,
         plist_info: str | bytes | bytearray,
-    ):
+    ) -> None:
+        """TODO(@jlyle)."""
         # List of instance attributes before initialization
         self.__plist_info_type = None
         self.__plist_info_format = None
@@ -100,7 +106,7 @@ class PlistHelper:
 
         if plist_info_type not in self.__PLIST_INFO_TYPES:
             raise RuntimeError(
-                'Invalid plist_info_type: "' + str(plist_info_type) + '"'
+                'Invalid plist_info_type: "' + str(plist_info_type) + '"',
             )
 
         self.__plist_info_type = plist_info_type
@@ -115,10 +121,12 @@ class PlistHelper:
 
             self.__plist_info_format, self.__plist_data = self.__parse_file(plist_info)
 
-    def __str__(self):
+    def __str__(self) -> str:
+        """TODO(@jlyle)."""
         return _plistlib.dumps(self.__plist_data, sort_keys=False).decode()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
+        """TODO(@jlyle)."""
         if self.__plist_info_type == self.PLIST_INFO_TYPE_FILE:
             return 'Plist("' + self.__plist_info + '")'
 
@@ -128,60 +136,52 @@ class PlistHelper:
         return None
 
     @staticmethod
-    def __get_variable_value_copy(var):
-        """
-        Get a copy of a variable as a value copy, not a reference copy.
+    def __get_variable_value_copy(var: _typing.Any) -> _typing.Any:
+        """Get a copy of a variable as a value copy, not a reference copy.
 
-        TODO
+        TODO(@jlyle)
         """
-
         if hasattr(var, "copy"):
             return var.copy()
 
         return var
 
     @classmethod
-    def __get_file_format_from_name(cls, file_format: str):
-        """
-        Get a plist file format specification based on theprovided  file format name.
+    def __get_file_format_from_name(cls, file_format: str) -> _MappingProxyType:
+        """Get a plist file format specification based on the provided  file format name.
 
-        TODO
+        TODO(@jlyle)
         """
-
         try:
             result = cls.FILE_FORMATS[file_format.lower()]
         except KeyError as e:
             raise ValueError(
-                'Invalid file format specified: "' + file_format + '"'
+                'Invalid file format specified: "' + file_format + '"',
             ) from e
 
         return result
 
     @classmethod
-    def __get_entry_data_type_by_name(cls, data_type_name: str):
-        """
-        Get a plist data type specification based on the provided data type name.
+    def __get_entry_data_type_by_name(cls, data_type_name: str) -> dict:
+        """Get a plist data type specification based on the provided data type name.
 
-        TODO
+        TODO(@jlyle)
         """
-
         try:
             result = cls.ENTRY_DATA_TYPES[data_type_name.lower()]
         except KeyError as e:
             raise ValueError(
-                'Invalid entry data type specified: "' + data_type_name + '"'
+                'Invalid entry data type specified: "' + data_type_name + '"',
             ) from e
 
-        return result
+        return result.copy()
 
     @classmethod
-    def __get_entry_data_type_by_class(cls, data: object):
-        """
-        Get a plist data type specification based on the data type class of the provided object.
+    def __get_entry_data_type_by_class(cls, data: object) -> dict:
+        """Get a plist data type specification based on the data type class of the provided object.
 
-        TODO
+        TODO(@jlyle)
         """
-
         result = [
             spec
             for spec in cls.ENTRY_DATA_TYPES.values()
@@ -193,22 +193,20 @@ class PlistHelper:
             raise ValueError('Invalid entry data type specified: "' + type(data) + '"')
         if num_results > 1:
             raise OverflowError(
-                "Entry data types has duplicate class types, developer action required"
+                "Entry data types has duplicate class types, developer action required",
             )
 
-        return result[0]
+        return result[0].copy()
 
     @classmethod
     def __parse_bytes(
         cls,
         plist_bytes: bytes | bytearray,
-    ):
-        """
-        Get the parsed plist bytestring data.
+    ) -> dict | list | bool | bytes | int | float | str:
+        """Get the parsed plist bytestring data.
 
-        TODO
+        TODO(@jlyle)
         """
-
         try:
             fp = _BytesIO(plist_bytes)
         except Exception as e:
@@ -235,17 +233,15 @@ class PlistHelper:
     def __parse_file(
         cls,
         plist_file: str,
-    ):
-        """
-        Get the parsed plist file data.
+    ) -> tuple[_MappingProxyType, dict | list | bool | bytes | int | float | str]:
+        """Get the parsed plist file data.
 
-        TODO
+        TODO(@jlyle)
         """
-
         if not isinstance(plist_file, str):
             raise TypeError(
                 "Invalid type for plist_file, expected str, got "
-                + type(plist_file).__name__
+                + type(plist_file).__name__,
             )
 
         try:
@@ -269,13 +265,11 @@ class PlistHelper:
         return fmt, plist
 
     @staticmethod
-    def __normalize_path(path: list | tuple | str | int):
-        """
-        Take a path list/tuple/str/int and make sure it is always a list.
+    def __normalize_path(path: list | tuple | str | int) -> list:
+        """Take a path list/tuple/str/int and make sure it is always a list.
 
-        TODO
+        TODO(@jlyle)
         """
-
         new_path = None
 
         if path is None:
@@ -296,21 +290,19 @@ class PlistHelper:
         for component in new_path:
             if not isinstance(component, (str, int)):
                 raise RuntimeError(
-                    "Invalid path specified, must be made up of strings or integers"
+                    "Invalid path specified, must be made up of strings or integers",
                 )
 
         return new_path
 
     @classmethod
     def create_empty_file(
-        cls, plist_file: str, output_format: str = "xml", data_type: str = "dict"
-    ):
-        """
-        Create a new, valid plist file with an empty root entry.
+        cls, plist_file: str, output_format: str = "xml", data_type: str = "dict",
+    ) -> None:
+        """Create a new, valid plist file with an empty root entry.
 
-        TODO
+        TODO(@jlyle)
         """
-
         file_format_spec = cls.__get_file_format_from_name(output_format)
         entry_data_type_spec = cls.__get_entry_data_type_by_name(data_type)
 
@@ -320,7 +312,7 @@ class PlistHelper:
             raise ValueError(
                 "Cannot create an empty plist with the "
                 + entry_data_type_spec["name"]
-                + " root entry data type"
+                + " root entry data type",
             )
 
         with open(plist_file, "xb") as fp:
@@ -331,20 +323,18 @@ class PlistHelper:
         cls,
         plist_bytes: bytes | bytearray,
         output_format: str = "xml",
-    ):
-        """
-        Convert a given plist representation to the specified format.
+    ) -> bytes:
+        """Convert a given plist representation to the specified format.
 
-        TODO
+        TODO(@jlyle)
         """
-
         file_format_spec = cls.__get_file_format_from_name(output_format)
 
         plist_format, plist_data = cls.__parse_bytes(plist_bytes)
 
         if plist_format != output_format:
             plist = _plistlib.dumps(
-                plist_data, fmt=file_format_spec["type"], sort_keys=False
+                plist_data, fmt=file_format_spec["type"], sort_keys=False,
             )
         else:
             plist = plist_bytes
@@ -356,13 +346,11 @@ class PlistHelper:
         cls,
         plist_file: str,
         output_format: str = "xml",
-    ):
-        """
-        Convert a given plist file to the specified format.
+    ) -> None:
+        """Convert a given plist file to the specified format.
 
-        TODO
+        TODO(@jlyle)
         """
-
         file_format_spec = cls.__get_file_format_from_name(output_format)
 
         plist_format, plist_data = cls.__parse_file(plist_file)
@@ -370,59 +358,48 @@ class PlistHelper:
         if plist_format != output_format:
             with open(plist_file, "wb") as fp:
                 _plistlib.dump(
-                    plist_data, fp, fmt=file_format_spec["type"], sort_keys=False
+                    plist_data, fp, fmt=file_format_spec["type"], sort_keys=False,
                 )
 
     def get_plist_info_format(
         self,
-    ):
-        """
-        Get the format of the parsed plist_info used to instantiate the class.
+    ) -> _MappingProxyType:
+        """Get the format of the parsed plist_info used to instantiate the class.
 
-        TODO
+        TODO(@jlyle)
         """
-
         return self.__plist_info_format
 
     def get_plist_info(
         self,
     ):
+        """Get the plist_info used to instantiate the class.
+
+        TODO(@jlyle)
         """
-        Get the plist_info used to instantiate the class.
-
-
-        TODO
-        """
-
         return self.__plist_info
 
     def get_data(self):
-        """
-        Get the parsed plist data.
+        """Get the parsed plist data.
 
         Will return None if unable to parse the file.
 
-        TODO
+        TODO(@jlyle)
         """
-
         return self.__get_variable_value_copy(self.__plist_data)
 
     def is_valid(self):
-        """
-        Check if a plist file is a valid plist.
+        """Check if a plist file is a valid plist.
 
-        TODO
+        TODO(@jlyle)
         """
-
         return self.__plist_data is not None
 
-    def exists(self, path: list | tuple | str | int = None):
-        """
-        Check if an entry exists.
+    def exists(self, path: list | tuple | str | int):
+        """Check if an entry exists.
 
-        TODO
+        TODO(@jlyle)
         """
-
         path = self.__normalize_path(path)
 
         try:
@@ -434,12 +411,10 @@ class PlistHelper:
 
     @classmethod
     def __get(cls, plist_data, path: list):
-        """
-        Get the python data representation of a plist entry.
+        """Get the python data representation of a plist entry.
 
-        TODO
+        TODO(@jlyle)
         """
-
         if not isinstance(path, list):
             raise TypeError("Path must be specified as a list")
 
@@ -447,9 +422,10 @@ class PlistHelper:
         string_path = ""
 
         for path_part in path:
+            new_path_part = path_part
             if string_path != "":
                 string_path += "."
-            string_path += str(path_part).replace(".", r"\.")
+            string_path += str(new_path_part).replace(".", r"\.")
 
             entry_data_type_spec = cls.__get_entry_data_type_by_class(entry)
 
@@ -463,14 +439,14 @@ class PlistHelper:
 
             if isinstance(entry, dict):
                 try:
-                    path_part = str(path_part)
-                    entry = entry[path_part]
+                    new_path_part = str(new_path_part)
+                    entry = entry[new_path_part]
                 except Exception as e:
                     raise KeyError(key_error_text) from e
             elif isinstance(entry, list):
                 try:
-                    path_part = int(path_part)
-                    entry = entry[path_part]
+                    new_path_part = int(new_path_part)
+                    entry = entry[new_path_part]
                 except Exception as e:
                     raise KeyError(key_error_text) from e
             else:
@@ -478,26 +454,22 @@ class PlistHelper:
 
         return entry
 
-    def get(self, path: list | tuple | str | int = None):
-        """
-        Get the python data representation of a plist entry.
+    def get(self, path: list | tuple | str | int | None = None):
+        """Get the python data representation of a plist entry.
 
-        TODO
+        TODO(@jlyle)
         """
-
         path = self.__normalize_path(path)
 
         entry = self.__get(self.__plist_data, path)
 
         return self.__get_variable_value_copy(entry)
 
-    def get_type(self, path: list | tuple | str | int = None):
-        """
-        Get the plist type of the entry.
+    def get_type(self, path: list | tuple | str | int | None = None):
+        """Get the plist type of the entry.
 
-        TODO
+        TODO(@jlyle)
         """
-
         path = self.__normalize_path(path)
 
         entry = self.__get(self.__plist_data, path)
@@ -506,13 +478,11 @@ class PlistHelper:
 
         return entry_data_type_spec["name"]
 
-    def get_dict_keys(self, path: list | tuple | str | int = None):
-        """
-        Get the keys of the specified dict entry.
+    def get_dict_keys(self, path: list | tuple | str | int | None = None):
+        """Get the keys of the specified dict entry.
 
-        TODO
+        TODO(@jlyle)
         """
-
         path = self.__normalize_path(path)
 
         entry = self.__get(self.__plist_data, path)
@@ -524,13 +494,11 @@ class PlistHelper:
 
         return tuple(entry.keys())
 
-    def get_array_length(self, path: list | tuple | str | int = None):
-        """
-        Get the length of the specified array entry.
+    def get_array_length(self, path: list | tuple | str | int | None = None):
+        """Get the length of the specified array entry.
 
-        TODO
+        TODO(@jlyle)
         """
-
         path = self.__normalize_path(path)
 
         entry = self.__get(self.__plist_data, path)
@@ -546,19 +514,16 @@ class PlistHelper:
         self,
         output_format: str = "xml",
         output_sort: bool = False,
-        path: list | tuple | str | int = None,
+        path: list | tuple | str | int | None = None,
     ):
-        """
-        Print the plist to the screen formatted in the specified format \
-        starting at the specified entry.
+        """Print the plist to the screen formatted in the specified format starting at the specified entry.
 
-        TODO
+        TODO(@jlyle)
         """
-
         if not isinstance(output_sort, bool):
             raise TypeError(
                 "Invalid data type for output_sort, expected bool got "
-                + type(output_sort).__name__
+                + type(output_sort).__name__,
             )
 
         path = self.__normalize_path(path)
@@ -575,7 +540,7 @@ class PlistHelper:
             plist_data = self.__get(self.__plist_data, path)
 
         output = _plistlib.dumps(
-            plist_data, fmt=file_format_spec["type"], sort_keys=output_sort
+            plist_data, fmt=file_format_spec["type"], sort_keys=output_sort,
         )
 
         if output_format == "xml":
@@ -585,13 +550,12 @@ class PlistHelper:
 
     def write(
         self,
-        output_file: str = None,
-        output_format: str = None,
-        output_sort: bool = False,
-        path: list | tuple | str | int = None,
+        output_file: str | None = None,
+        output_format: str | None = None,
+        output_sort: bool | None = False,
+        path: list | tuple | str | int | None = None,
     ):
-        """
-        Write the plist to the specified file.
+        """Write the plist to the specified file.
 
         The entire plist will be written to the file unless a path value is
         provided, then that entry down will be used to create the plist file.
@@ -603,14 +567,12 @@ class PlistHelper:
         this object. If a plist representation was used to instantiate this object,
         then a RuntimeError is thrown.
 
-
-        TODO
+        TODO(@jlyle)
         """
-
         if not isinstance(output_sort, bool):
             raise TypeError(
                 "Invalid data type for output_sort, expected bool got "
-                + type(output_sort).__name__
+                + type(output_sort).__name__,
             )
 
         if output_file is None:
@@ -618,7 +580,7 @@ class PlistHelper:
                 output_file = self.__plist_info
             elif self.__plist_info_type == self.PLIST_INFO_TYPE_REPRESENTATION:
                 raise RuntimeError(
-                    "Object instantiated from plist representation, value for output_file required"
+                    "Object instantiated from plist representation, value for output_file required",
                 )
 
         if output_format is None:
@@ -639,7 +601,7 @@ class PlistHelper:
         # the plist conversion fails
         with _tempfile.NamedTemporaryFile() as tmp:
             _plistlib.dump(
-                plist_data, tmp, fmt=file_format_spec["type"], sort_keys=output_sort
+                plist_data, tmp, fmt=file_format_spec["type"], sort_keys=output_sort,
             )
 
             with open(output_file, "wb") as fp:
@@ -648,17 +610,15 @@ class PlistHelper:
                 fp.write(tmp.read())
 
     def insert(self, path: list | tuple | str | int, value):
-        """
-        Insert a new entry into the plist
+        """Insert a new entry into the plist.
 
-        TODO
+        TODO(@jlyle)
         """
-
         root_data_type_spec = self.__get_entry_data_type_by_class(self.__plist_data)
 
         if root_data_type_spec["name"] not in ("array", "dict"):
             raise KeyError(
-                "Cannot insert into a plist with a root type that is not array or dict"
+                "Cannot insert into a plist with a root type that is not array or dict",
             )
 
         path = self.__normalize_path(path)
@@ -689,7 +649,7 @@ class PlistHelper:
                 insertion_key = int(insertion_key)
             except Exception as e:
                 raise ValueError(
-                    "Inserting into an array requires an integer path spec"
+                    "Inserting into an array requires an integer path spec",
                 ) from e
 
             if insertion_key > len(parent_entry):
@@ -699,7 +659,7 @@ class PlistHelper:
                 insertion_key = str(insertion_key)
             except Exception as e:
                 raise ValueError(
-                    "Inserting into a dict requires a string path spec"
+                    "Inserting into a dict requires a string path spec",
                 ) from e
 
         try:
@@ -714,21 +674,19 @@ class PlistHelper:
             parent_entry[insertion_key] = value
 
     def insert_array_append(self, path: list | tuple | str | int, value):
-        """
-        Insert a value into an array by appending it to the end of the array.
+        """Insert a value into an array by appending it to the end of the array.
 
         If the path specified does not exist, an empty array will attempt to be
         created at the specified path. The parent of the specified path must
         already exist for this to work.
 
-        TODO
+        TODO(@jlyle)
         """
-
         root_data_type_spec = self.__get_entry_data_type_by_class(self.__plist_data)
 
         if root_data_type_spec["name"] not in ("array", "dict"):
             raise KeyError(
-                "Cannot insert into a plist with a root type that is not array or dict"
+                "Cannot insert into a plist with a root type that is not array or dict",
             )
 
         path = self.__normalize_path(path)
@@ -761,21 +719,19 @@ class PlistHelper:
             raise
 
     def update(self, path: list | tuple | str | int, value):
-        """
-        Update an existing entry in the plist.
+        """Update an existing entry in the plist.
 
         Updates are allowed to change the data type of the entry.
 
-        TODO
+        TODO(@jlyle)
         """
-
         root_data_type_spec = self.__get_entry_data_type_by_class(self.__plist_data)
 
         path = self.__normalize_path(path)
 
         if root_data_type_spec["name"] not in ("array", "dict") and len(path) > 0:
             raise KeyError(
-                "Update path cannot be provided for root data types that are not array or dict"
+                "Update path cannot be provided for root data types that are not array or dict",
             )
 
         try:
@@ -801,7 +757,7 @@ class PlistHelper:
             parent_entry = self.__get(self.__plist_data, parent_path)
 
             parent_entry_data_type_spec = self.__get_entry_data_type_by_class(
-                parent_entry
+                parent_entry,
             )
 
             if parent_entry_data_type_spec["name"] == "array":
@@ -812,17 +768,15 @@ class PlistHelper:
             parent_entry[update_key] = value
 
     def delete(self, path: list | tuple | str | int):
-        """
-        Delete an entry from a plist.
+        """Delete an entry from a plist.
 
-        TODO
+        TODO(@jlyle)
         """
-
         root_data_type_spec = self.__get_entry_data_type_by_class(self.__plist_data)
 
         if root_data_type_spec["name"] not in ("array", "dict"):
             raise KeyError(
-                "Delete cannot be preformed on root data types that are not array or dict"
+                "Delete cannot be preformed on root data types that are not array or dict",
             )
 
         path = self.__normalize_path(path)
@@ -847,13 +801,10 @@ class PlistHelper:
         del parent_entry[delete_key]
 
     def upsert(self, path: list | tuple | str | int, value):
-        """
-        Insert or update a plist entry depending on if the entry specified
-        by the path already exists or not.
+        """Insert or update a plist entry depending on if the entry specified by the path already exists or not.
 
-        TODO
+        TODO(@jlyle)
         """
-
         path = self.__normalize_path(path)
 
         if not self.exists(path):
@@ -862,14 +813,12 @@ class PlistHelper:
             self.update(path, value)
 
     def __merge(
-        self, source_entry, target_path: list | tuple | str | int, overwrite: bool
+        self, source_entry, target_path: list | tuple | str | int, overwrite: bool,
     ):
-        """
-        Recursively merge python data (source_entry) into the current plist.
+        """Recursively merge python data (source_entry) into the current plist.
 
-        TODO
+        TODO(@jlyle)
         """
-
         target_path = self.__normalize_path(target_path)
 
         ########################################################################
@@ -955,17 +904,14 @@ class PlistHelper:
         self,
         source_plist_info_type: str,
         source_plist_info: str | bytes | bytearray,
-        source_path: list | tuple | str | int = None,
-        target_path: list | tuple | str | int = None,
+        source_path: list | tuple | str | int | None = None,
+        target_path: list | tuple | str | int | None = None,
         overwrite: bool = True,
-    ):
-        """
-        Merge in a plist file (or a subset of a plist file) to the current
-        plist.
+    ) -> None:
+        """Merge in a plist file (or a subset of a plist file) to the current plist.
 
-        TODO
+        TODO(@jlyle)
         """
-
         ########################################################################
         ##  Parameter verifications
         ########################################################################
@@ -973,12 +919,12 @@ class PlistHelper:
         if not isinstance(overwrite, bool):
             raise TypeError(
                 "Invalid overwrite type. Execpted boolean (bool), got "
-                + type(overwrite).__name__
+                + type(overwrite).__name__,
             )
 
         if source_plist_info_type not in self.__PLIST_INFO_TYPES:
             raise RuntimeError(
-                'Invalid source_plist_info_type: "' + str(source_plist_info_type) + '"'
+                'Invalid source_plist_info_type: "' + str(source_plist_info_type) + '"',
             )
 
         if source_plist_info_type == self.PLIST_INFO_TYPE_REPRESENTATION:
@@ -989,7 +935,7 @@ class PlistHelper:
             raise NameError(
                 'JML Invalid source_plist_info_type: "'
                 + str(source_plist_info_type)
-                + '"'
+                + '"',
             )
 
         source_path = self.__normalize_path(source_path)
