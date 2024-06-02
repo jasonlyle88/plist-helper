@@ -7,7 +7,6 @@ import os.path as _os_path
 import plistlib as _plistlib
 import sys as _sys
 import tempfile as _tempfile
-import typing as _typing
 from io import BytesIO as _BytesIO
 from types import MappingProxyType as _MappingProxyType
 
