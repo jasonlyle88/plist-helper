@@ -247,7 +247,9 @@ class PlistHelper:
 
         cls.__assert(
             num_results > 1,
-            OverflowError("Entry data types has duplicate class types, developer action required"),
+            OverflowError(
+                "Entry data types has duplicate class types, developer action required",
+            ),
         )
 
         return result[0].copy()
@@ -294,7 +296,10 @@ class PlistHelper:
         """
         cls.__assert(
             not isinstance(plist_file, str),
-            TypeError("Invalid type for plist_file, expected str, got " + type(plist_file).__name__),
+            TypeError(
+                "Invalid type for plist_file, expected str, got "
+                + type(plist_file).__name__,
+            ),
         )
 
         try:
@@ -318,7 +323,7 @@ class PlistHelper:
         return fmt, plist
 
     @classmethod
-    def __normalize_path(cls,path: list | tuple | str | int) -> list:
+    def __normalize_path(cls, path: list | tuple | str | int) -> list:
         """Take a path list/tuple/str/int and make sure it is always a list.
 
         TODO(@jlyle)
@@ -343,7 +348,9 @@ class PlistHelper:
         for component in new_path:
             cls.__assert(
                 isinstance(component, (str, int)),
-                ValueError("Invalid path specified, must be made up of strings or integers"),
+                ValueError(
+                    "Invalid path specified, must be made up of strings or integers",
+                ),
             )
 
         return new_path
@@ -364,7 +371,11 @@ class PlistHelper:
 
         cls.__assert(
             entry_data_type_spec["name"] not in ("bool", "date", "integer", "real"),
-            ValueError("Cannot create an empty plist with the " + entry_data_type_spec["name"] + " root entry data type"),
+            ValueError(
+                "Cannot create an empty plist with the "
+                + entry_data_type_spec["name"]
+                + " root entry data type",
+            ),
         )
 
         empty_value = entry_data_type_spec["class"]()
@@ -595,7 +606,10 @@ class PlistHelper:
         """
         self.__assert(
             isinstance(output_sort, bool),
-            TypeError("Invalid data type for output_sort, expected bool got " + type(output_sort).__name__),
+            TypeError(
+                "Invalid data type for output_sort, expected bool got "
+                + type(output_sort).__name__,
+            ),
         )
 
         path = self.__normalize_path(path)
@@ -645,13 +659,18 @@ class PlistHelper:
         """
         self.__assert(
             isinstance(output_sort, bool),
-            TypeError("Invalid data type for output_sort, expected bool got " + type(output_sort).__name__),
+            TypeError(
+                "Invalid data type for output_sort, expected bool got "
+                + type(output_sort).__name__,
+            ),
         )
 
         if output_file is None:
             self.__assert(
                 self.__plist_info_type == self.PLIST_INFO_TYPE_FILE,
-                RuntimeError("Object not instantiated from plist file, value for output_file required"),
+                RuntimeError(
+                    "Object not instantiated from plist file, value for output_file required",
+                ),
             )
 
             output_file = self.__plist_info
@@ -779,7 +798,9 @@ class PlistHelper:
 
         self.__assert(
             root_data_type_spec["name"] in ("array", "dict"),
-            KeyError("Cannot insert into a plist with a root type that is not array or dict"),
+            KeyError(
+                "Cannot insert into a plist with a root type that is not array or dict",
+            ),
         )
 
         path = self.__normalize_path(path)
@@ -832,7 +853,9 @@ class PlistHelper:
 
         self.__assert(
             root_data_type_spec["name"] in ("array", "dict") or len(path) == 0,
-            KeyError("Update path cannot be provided for root data types that are not array or dict"),
+            KeyError(
+                "Update path cannot be provided for root data types that are not array or dict",
+            ),
         )
 
         try:
@@ -879,7 +902,9 @@ class PlistHelper:
 
         self.__assert(
             root_data_type_spec["name"] in ("array", "dict"),
-            KeyError("Delete cannot be preformed on root data types that are not array or dict"),
+            KeyError(
+                "Delete cannot be preformed on root data types that are not array or dict",
+            ),
         )
 
         path = self.__normalize_path(path)
@@ -1032,7 +1057,10 @@ class PlistHelper:
 
         self.__assert(
             isinstance(overwrite, bool),
-            TypeError("Invalid overwrite type. Execpted boolean (bool), got " + type(overwrite).__name__),
+            TypeError(
+                "Invalid overwrite type. Execpted boolean (bool), got "
+                + type(overwrite).__name__,
+            ),
         )
 
         source_path = self.__normalize_path(source_path)
