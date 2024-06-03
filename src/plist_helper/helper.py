@@ -295,7 +295,7 @@ class PlistHelper:
         TODO(@jlyle)
         """
         cls.__assert(
-            not isinstance(plist_file, str),
+            isinstance(plist_file, str),
             TypeError(
                 "Invalid type for plist_file, expected str, got "
                 + type(plist_file).__name__,
