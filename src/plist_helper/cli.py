@@ -9,7 +9,7 @@ import sys as _sys
 import textwrap as _textwrap
 import typing as _typing
 
-from plist_helper.helper import PlistHelper as _PlistHelper
+from plist_helper.plist import PlistHelper as _PlistHelper
 
 __TRUTHY_VALUES = [
     "t",

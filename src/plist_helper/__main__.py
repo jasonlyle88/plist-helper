@@ -1,15 +1,10 @@
-"""
-Main module for plist_helper
-"""
+"""Main module for plist_helper."""
 
 from plist_helper import cli
 
 
-def main():
-    """
-    Main implemntation to allow execution of PlistHelper cli when executing the module.
-    """
-
+def main() -> None:
+    """Execute PlistHelper cli when executing the module."""
     cli.main()
 
 
