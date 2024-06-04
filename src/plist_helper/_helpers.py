@@ -1,5 +1,5 @@
 """Helper functions for use in plist_helper modules."""
-def verify(
+def assert_(
     condition: bool,
     failure_exception: Exception,
 ) -> None:
