@@ -10,10 +10,7 @@ import tempfile as _tempfile
 from io import BytesIO as _BytesIO
 from types import MappingProxyType as _MappingProxyType
 
-# import plist_helper.helpers as _helpers
 from plist_helper._helpers import assert_
-
-# import plist_helper as _ph
 
 
 class PlistHelper:
