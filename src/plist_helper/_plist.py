@@ -221,20 +221,23 @@ class PlistHelper:
 
         TODO(@jlyle)
         """
+        # Compare types rather than using isinstance because bool is a subclass
+        # of int and will return too many results
         result = [
             spec
             for spec in cls.ENTRY_DATA_TYPES.values()
-            if isinstance(data, (spec["class"], tuple(spec["otherClasses"])))
+            if type(data) == spec["class"]
+                or type(data) in spec["otherClasses"]
         ]
         num_results = len(result)
 
         assert_(
-            num_results == 0,
-            ValueError('Invalid entry data type specified: "' + type(data) + '"'),
+            num_results > 0,
+            ValueError('Invalid entry data type specified: "' + type(data).__name__ + '"'),
         )
 
         assert_(
-            num_results > 1,
+            num_results == 1,
             OverflowError(
                 "Entry data types has duplicate class types, developer action required",
             ),
@@ -704,17 +707,17 @@ class PlistHelper:
         root_data_type_spec = self.__get_entry_data_type_by_class(self.__plist_data)
 
         assert_(
-            root_data_type_spec["name"] not in ("array", "dict"),
-            KeyError,
-            "Cannot insert into a plist with a root type that is not array or dict",
+            root_data_type_spec["name"] in ("array", "dict"),
+            KeyError(
+                "Cannot insert into a plist with a root type that is not array or dict",
+            ),
         )
 
         path = self.__normalize_path(path)
 
         assert_(
-            len(path) == 0,
-            KeyError,
-            "Insertion path must be provided",
+            len(path) > 0,
+            KeyError("Insertion path must be provided"),
         )
 
         try:
@@ -723,9 +726,8 @@ class PlistHelper:
             raise TypeError("Invalid data type for provided value") from e
 
         assert_(
-            self.exists(path),
-            RuntimeError,
-            "An entry at this path already exists",
+            not self.exists(path),
+            RuntimeError("An entry at this path already exists"),
         )
 
         parent_path = list(path)

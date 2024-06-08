@@ -24,7 +24,7 @@ __ALL_ARGUMENTS = _MappingProxyType(
     {
         "data_type": _MappingProxyType(
             {
-                "args": _MappingProxyType({"-t", "--data-type"}),
+                "args": {"-t", "--data-type"},
                 "kwargs": _MappingProxyType(
                     {
                         "dest": "value_data_type",
@@ -38,7 +38,7 @@ __ALL_ARGUMENTS = _MappingProxyType(
         ),
         "entry": _MappingProxyType(
             {
-                "args": _MappingProxyType({"-e", "--entry"}),
+                "args": {"-e", "--entry"},
                 "kwargs": _MappingProxyType(
                     {
                         "dest": "path",
@@ -52,7 +52,7 @@ __ALL_ARGUMENTS = _MappingProxyType(
         ),
         "format": _MappingProxyType(
             {
-                "args": _MappingProxyType({"-f", "--format"}),
+                "args": {"-f", "--format"},
                 "kwargs": _MappingProxyType(
                     {
                         "dest": "output_format",
@@ -65,7 +65,7 @@ __ALL_ARGUMENTS = _MappingProxyType(
         ),
         "plist": _MappingProxyType(
             {
-                "args": _MappingProxyType({"-p", "--plist"}),
+                "args": {"-p", "--plist"},
                 "kwargs": _MappingProxyType(
                     {
                         "dest": "plist",
@@ -78,7 +78,7 @@ __ALL_ARGUMENTS = _MappingProxyType(
         ),
         "root_data_type": _MappingProxyType(
             {
-                "args": _MappingProxyType({"-t", "--data-type"}),
+                "args": {"-t", "--data-type"},
                 "kwargs": _MappingProxyType(
                     {
                         "dest": "data_type",
@@ -91,7 +91,7 @@ __ALL_ARGUMENTS = _MappingProxyType(
         ),
         "sort": _MappingProxyType(
             {
-                "args": _MappingProxyType({"-s", "--sort"}),
+                "args": {"-s", "--sort"},
                 "kwargs": _MappingProxyType(
                     {
                         "dest": "output_sort",
@@ -103,7 +103,7 @@ __ALL_ARGUMENTS = _MappingProxyType(
         ),
         "value": _MappingProxyType(
             {
-                "args": _MappingProxyType({"-v", "--value"}),
+                "args": {"-v", "--value"},
                 "kwargs": _MappingProxyType(
                     {
                         "dest": "value",
@@ -361,7 +361,9 @@ def __handle_arguments(args: _argparse.Namespace) -> dict:
 
     if "value_data_type" in main_method_kwargs:
         # Verify parameter combinations
-        value_specified = "value" in main_method_kwargs
+        value_specified = \
+            "value" in main_method_kwargs \
+            and main_method_kwargs["value"] is not None
 
         if (
             main_method_kwargs["value_data_type"] in ["array", "dict"]
@@ -376,11 +378,11 @@ def __handle_arguments(args: _argparse.Namespace) -> dict:
             and not value_specified
         ):
             raise RuntimeError(
-                "A value must be provided when data type an a simple data type",
+                "A value must be provided when the data type is a simple data type",
             )  # TODO(@jlyle): Generic error handling needs to be done here
 
-        if not value_specified:
-            main_method_kwargs["value"] = ""
+    if "value" in main_method_kwargs and main_method_kwargs["value"] is None:
+        del main_method_kwargs["value"]
 
     return {
         "action_spec": action_spec,
@@ -393,14 +395,23 @@ def __handle_arguments(args: _argparse.Namespace) -> dict:
 def __convert_provided_value_to_data_type(  # noqa: C901,PLR0912
     argument_results: dict,
 ) -> None:
+    main_method_kwargs = argument_results["main_method_kwargs"]
+
     if "value_data_type" not in argument_results["main_method_kwargs"]:
         return
 
-    main_method_kwargs = argument_results["main_method_kwargs"]
-
     value_data_type = main_method_kwargs["value_data_type"]
-
     del main_method_kwargs["value_data_type"]
+
+    if value_data_type in ("array", "dict") and "value" in main_method_kwargs:
+        raise RuntimeError("Value cannot be provided for collection types")
+
+    if value_data_type not in ("array", "dict"):
+        if "value" not in main_method_kwargs:
+            raise RuntimeError("Value must be provided for simple types")
+
+        if not isinstance(main_method_kwargs["value"], str):
+            raise TypeError("Expected to convert str") # TODO(@jlyle): Generic error handling needs to be done here
 
     # Attempt to convert the provided value to the appropriate python type
     # based on the provided data type
@@ -413,10 +424,7 @@ def __convert_provided_value_to_data_type(  # noqa: C901,PLR0912
         )
 
     elif value_data_type == "data":
-        try:
-            main_method_kwargs["value"] = main_method_kwargs["value"].encode()
-        except AttributeError as e:
-            raise e  # TODO(@jlyle): Generic error handling needs to be done here
+        main_method_kwargs["value"] = main_method_kwargs["value"].encode()
 
     elif value_data_type == "date":
         try:
@@ -442,10 +450,7 @@ def __convert_provided_value_to_data_type(  # noqa: C901,PLR0912
             raise e  # TODO(@jlyle): Generic error handling needs to be done here
 
     elif value_data_type == "string":
-        try:
-            main_method_kwargs["value"] = str(main_method_kwargs["value"])
-        except ValueError as e:
-            raise e  # TODO(@jlyle): Generic error handling needs to be done here
+        pass # Value data type is already a string, nothing to do
 
     else:
         raise ValueError(
