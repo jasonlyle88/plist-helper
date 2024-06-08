@@ -333,14 +333,21 @@ def __handle_arguments(args: _argparse.Namespace) -> dict:
     main_method_args = []
     main_method_kwargs = vars(args).copy()
 
+    # Placeholder for the parsed plist
     plist = None
 
+    # Action name is just for the CLI handler, not the main_method, so remove it
     del main_method_kwargs["action_name"]
+
+    # Remove any global arguments from kwargs
     for global_argument in __GLOBAL_ARGUMENTS:
         del main_method_kwargs[global_argument["kwargs"]["dest"]]
 
+    # Get the action definition based on the action name
     action_spec = __ACTIONS[args.action_name]
 
+    # Get the type of the main method (static method, class method, or function)
+    # Based on the type of the main method, setup args and kwargs appropriately
     typed_handle = __get_original_descriptor_from_handle(action_spec["main_method"])
     if isinstance(typed_handle, __TYPES.classmethod):
         main_method_kwargs["plist_file"] = args.plist
@@ -348,7 +355,7 @@ def __handle_arguments(args: _argparse.Namespace) -> dict:
         try:
             plist = _PlistHelper(_PlistHelper.PLIST_INFO_TYPE_FILE, args.plist)
         except Exception:
-            __exit(status=101, message="Unable to open plist file\n")
+            __exit(status=101, message="Unable to open plist file\n")  # TODO(@jlyle): Generic error handling needs to be done here
 
         main_method_args = [
             plist,
@@ -359,7 +366,7 @@ def __handle_arguments(args: _argparse.Namespace) -> dict:
             message='Action main method not recognized type: "'
             + type(typed_handle).__name__
             + '"\n',
-        )
+        ) # TODO(@jlyle): Generic error handling needs to be done here
 
     if "value_data_type" in main_method_kwargs:
         # Verify parameter combinations
@@ -399,18 +406,24 @@ def __convert_provided_value_to_data_type(  # noqa: C901,PLR0912
 ) -> None:
     main_method_kwargs = argument_results["main_method_kwargs"]
 
+    # Check if there is anything to convert.
+    # If there is nothing to convert, then just exit
     if "value_data_type" not in argument_results["main_method_kwargs"]:
         return
 
+    # Value data type is just for the CLI to know how to convert.
+    # Since this is where the conversion is done, store it locally and remove
+    # from the kwargs
     value_data_type = main_method_kwargs["value_data_type"]
     del main_method_kwargs["value_data_type"]
 
+    # Check value against provided data type
     if value_data_type in ("array", "dict") and "value" in main_method_kwargs:
-        raise RuntimeError("Value cannot be provided for collection types")
+        raise RuntimeError("Value cannot be provided for collection types")  # TODO(@jlyle): Generic error handling needs to be done here
 
     if value_data_type not in ("array", "dict"):
         if "value" not in main_method_kwargs:
-            raise RuntimeError("Value must be provided for simple types")
+            raise RuntimeError("Value must be provided for simple types")  # TODO(@jlyle): Generic error handling needs to be done here
 
         if not isinstance(main_method_kwargs["value"], str):
             raise TypeError("Expected to convert str") # TODO(@jlyle): Generic error handling needs to be done here
@@ -483,7 +496,8 @@ def __execute_main_method(argument_results: dict) -> None:
             _sys.stdout.write(str(entry) + "\n")
     elif action_spec["main_method_post"] == "output_simple_result":
         if isinstance(result, bool):
-            # return inverse int because false = 0 but 0 is successful exit code
+            # return inverse int value because false = 0 but in the shell,
+            # 0 is successful exit code
             __exit(int(not result))
         elif isinstance(result, (dict, set, tuple, list)):
             raise ValueError(
