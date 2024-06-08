@@ -125,7 +125,7 @@ __GLOBAL_ARGUMENTS = (__ALL_ARGUMENTS["plist"],)
 # DONE: getDictKeys
 # DONE: getType
 # DONE: getValue
-# TODO(@jlyle): insert - CLI setup, need to test everything here
+# DONE: insert
 # TODO(@jlyle): insertArrayAppend
 # TODO(@jlyle): merge
 # DONE: print
