@@ -333,6 +333,8 @@ def __handle_arguments(args: _argparse.Namespace) -> dict:
     main_method_args = []
     main_method_kwargs = vars(args).copy()
 
+    plist = None
+
     del main_method_kwargs["action_name"]
     for global_argument in __GLOBAL_ARGUMENTS:
         del main_method_kwargs[global_argument["kwargs"]["dest"]]
