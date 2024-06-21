@@ -42,8 +42,10 @@ __ALL_ARGUMENTS = _MappingProxyType(
                 "kwargs": _MappingProxyType(
                     {
                         "dest": "path",
-                        "help": """The path to the object to print. \
-                Can be provided 0-n times to specify root or any child""",
+                        "help": """
+                                The path to the target plist entry
+                                Can be provided 0-n times to specify the root or any child
+                                """,
                         "action": "append",
                         "default": [],
                     },
@@ -63,13 +65,38 @@ __ALL_ARGUMENTS = _MappingProxyType(
                 ),
             },
         ),
-        "plist": _MappingProxyType(
+        "overwrite": _MappingProxyType(
+            {
+                "args": {"-o", "--overwrite"},
+                "kwargs": _MappingProxyType(
+                    {
+                        "dest": "overwrite",
+                        "help": "Overwrite existing entries in target plist with entries from the source plist",
+                        "action": "store_true",
+                    },
+                ),
+            },
+        ),
+        "plist_source": _MappingProxyType(
+            {
+                "args": {"-P", "--plist-source"},
+                "kwargs": _MappingProxyType(
+                    {
+                        "dest": "plist_source",
+                        "help": "The source plist to pull data from to merge",
+                        "type": str,
+                        "required": True,
+                    },
+                ),
+            },
+        ),
+        "plist_target": _MappingProxyType(
             {
                 "args": {"-p", "--plist"},
                 "kwargs": _MappingProxyType(
                     {
-                        "dest": "plist",
-                        "help": "The plist to act upon",
+                        "dest": "plist_target",
+                        "help": "The target plist to act upon",
                         "type": str,
                         "required": True,
                     },
@@ -101,6 +128,38 @@ __ALL_ARGUMENTS = _MappingProxyType(
                 ),
             },
         ),
+        "source_path": _MappingProxyType(
+            {
+                "args": {"-E", "--entry-source"},
+                "kwargs": _MappingProxyType(
+                    {
+                        "dest": "source_path",
+                        "help": """
+                                The path to the source plist entry
+                                Can be provided 0-n times to specify the root or any child
+                                """,
+                        "action": "append",
+                        "default": [],
+                    },
+                ),
+            },
+        ),
+        "target_path": _MappingProxyType(
+            {
+                "args": {"-e", "--entry-target"},
+                "kwargs": _MappingProxyType(
+                    {
+                        "dest": "target_path",
+                        "help": """
+                                The path to the target plist entry
+                                Can be provided 0-n times to specify the root or any child
+                                """,
+                        "action": "append",
+                        "default": [],
+                    },
+                ),
+            },
+        ),
         "value": _MappingProxyType(
             {
                 "args": {"-v", "--value"},
@@ -115,7 +174,7 @@ __ALL_ARGUMENTS = _MappingProxyType(
     },
 )
 
-__GLOBAL_ARGUMENTS = (__ALL_ARGUMENTS["plist"],)
+__GLOBAL_ARGUMENTS = (__ALL_ARGUMENTS["plist_target"],)
 
 # DONE: convertFile
 # DONE: createFile
@@ -127,7 +186,7 @@ __GLOBAL_ARGUMENTS = (__ALL_ARGUMENTS["plist"],)
 # DONE: getValue
 # DONE: insert
 # DONE: insertArrayAppend
-# TODO(@jlyle): merge
+# DONE: merge
 # DONE: print
 # DONE: update
 # DONE: upsert
@@ -221,6 +280,19 @@ __ACTIONS = {
                 __ALL_ARGUMENTS["entry"],
                 __ALL_ARGUMENTS["data_type"],
                 __ALL_ARGUMENTS["value"],
+            ),
+        },
+    ),
+    "merge": _MappingProxyType(
+        {
+            "main_method": _PlistHelper.merge,
+            "main_method_post": "write_to_file",
+            "action_help": None,
+            "argument_definitions": (
+                __ALL_ARGUMENTS["target_path"],
+                __ALL_ARGUMENTS["plist_source"],
+                __ALL_ARGUMENTS["source_path"],
+                __ALL_ARGUMENTS["overwrite"],
             ),
         },
     ),
@@ -370,7 +442,7 @@ def __handle_arguments(args: _argparse.Namespace) -> dict:
     main_method_kwargs = vars(args).copy()
 
     # Placeholder for the parsed plist
-    plist = None
+    plist_target = None
 
     # Action name is just for the CLI handler, not the main_method, so remove it
     del main_method_kwargs["action_name"]
@@ -386,15 +458,15 @@ def __handle_arguments(args: _argparse.Namespace) -> dict:
     # Based on the type of the main method, setup args and kwargs appropriately
     typed_handle = __get_original_descriptor_from_handle(action_spec["main_method"])
     if isinstance(typed_handle, __TYPES.classmethod):
-        main_method_kwargs["plist_file"] = args.plist
+        main_method_kwargs["plist_file"] = args.plist_target
     elif isinstance(typed_handle, __TYPES.function):
         try:
-            plist = _PlistHelper(_PlistHelper.PLIST_INFO_TYPE_FILE, args.plist)
+            plist_target = _PlistHelper(_PlistHelper.PLIST_INFO_TYPE_FILE, args.plist_target)
         except Exception:
-            __exit(status=101, message="Unable to open plist file\n")  # TODO(@jlyle): Generic error handling needs to be done here
+            __exit(status=101, message="Unable to open target plist file\n")  # TODO(@jlyle): Generic error handling needs to be done here
 
         main_method_args = [
-            plist,
+            plist_target,
         ]
     else:
         __exit(
@@ -429,11 +501,20 @@ def __handle_arguments(args: _argparse.Namespace) -> dict:
     if "value" in main_method_kwargs and main_method_kwargs["value"] is None:
         del main_method_kwargs["value"]
 
+    if "plist_source" in main_method_kwargs:
+        try:
+            source_plist_helper = _PlistHelper(_PlistHelper.PLIST_INFO_TYPE_FILE, main_method_kwargs["plist_source"])
+        except Exception:
+            __exit(status=101, message="Unable to open source plist file\n")  # TODO(@jlyle): Generic error handling needs to be done here
+
+        del main_method_kwargs["plist_source"]
+        main_method_kwargs["source_plist_helper"] = source_plist_helper
+
     return {
         "action_spec": action_spec,
         "main_method_args": main_method_args,
         "main_method_kwargs": main_method_kwargs,
-        "plist": plist,
+        "plist_target": plist_target,
     }
 
 
@@ -513,7 +594,7 @@ def __execute_main_method(argument_results: dict) -> None:
     action_spec = argument_results["action_spec"]
     main_method_args = argument_results["main_method_args"]
     main_method_kwargs = argument_results["main_method_kwargs"]
-    plist = argument_results["plist"]
+    plist_target = argument_results["plist_target"]
 
     result = None
     execution_exception = None
@@ -542,7 +623,7 @@ def __execute_main_method(argument_results: dict) -> None:
         else:
             _sys.stdout.write(str(result) + "\n")
     elif action_spec["main_method_post"] == "write_to_file":
-        plist.write()
+        plist_target.write()
 
 
 def main() -> None:
