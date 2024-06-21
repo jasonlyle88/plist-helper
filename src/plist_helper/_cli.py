@@ -126,11 +126,11 @@ __GLOBAL_ARGUMENTS = (__ALL_ARGUMENTS["plist"],)
 # DONE: getType
 # DONE: getValue
 # DONE: insert
-# TODO(@jlyle): insertArrayAppend
+# DONE: insertArrayAppend
 # TODO(@jlyle): merge
 # DONE: print
-# TODO(@jlyle): update
-# TODO(@jlyle): upsert
+# DONE: update
+# DONE: upsert
 
 __ACTIONS = {
     "convertFile": _MappingProxyType(
@@ -212,6 +212,18 @@ __ACTIONS = {
             ),
         },
     ),
+    "insertArrayAppend": _MappingProxyType(
+        {
+            "main_method": _PlistHelper.insert_array_append,
+            "main_method_post": "write_to_file",
+            "action_help": None,
+            "argument_definitions": (
+                __ALL_ARGUMENTS["entry"],
+                __ALL_ARGUMENTS["data_type"],
+                __ALL_ARGUMENTS["value"],
+            ),
+        },
+    ),
     "print": _MappingProxyType(
         {
             "main_method": _PlistHelper.print,
@@ -221,6 +233,30 @@ __ACTIONS = {
                 __ALL_ARGUMENTS["format"],
                 __ALL_ARGUMENTS["sort"],
                 __ALL_ARGUMENTS["entry"],
+            ),
+        },
+    ),
+    "update": _MappingProxyType(
+        {
+            "main_method": _PlistHelper.update,
+            "main_method_post": "write_to_file",
+            "action_help": None,
+            "argument_definitions": (
+                __ALL_ARGUMENTS["entry"],
+                __ALL_ARGUMENTS["data_type"],
+                __ALL_ARGUMENTS["value"],
+            ),
+        },
+    ),
+    "upsert": _MappingProxyType(
+        {
+            "main_method": _PlistHelper.upsert,
+            "main_method_post": "write_to_file",
+            "action_help": None,
+            "argument_definitions": (
+                __ALL_ARGUMENTS["entry"],
+                __ALL_ARGUMENTS["data_type"],
+                __ALL_ARGUMENTS["value"],
             ),
         },
     ),
