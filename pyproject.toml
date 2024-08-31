@@ -37,4 +37,8 @@ bandit = "^1.7.8"
 
 [tool.ruff.lint]
 select = ["E4", "E7", "E9", "F", "W", "PL", "S", "B", "A", "SIM", "RUF", "C90", "I", "N", "D", "ANN", "COM", "ISC", "ICN", "T20", "Q", "RET", "RSE", "SLF", "TID", "TCH", "ARG", "TD"]
-ignore = ["ANN101", "ANN102", "TD003"]
+ignore = ["ANN101", "ANN102", "TD003", "D203", "D213"]
+
+[tool.ruff.lint.mccabe]
+# Flag errors (`C901`) whenever the complexity level exceeds 15. Default 10
+max-complexity = 15

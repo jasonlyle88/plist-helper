@@ -7,7 +7,7 @@ def assert_(
 ) -> None:
     """Make sure a condition is met before continuing execution.
 
-    TODO(@jlyle)
+    TODO(@jlyle): Docstring
     """
     if condition:
         return

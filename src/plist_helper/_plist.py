@@ -45,6 +45,7 @@ class PlistHelper:
         lists instead of tuples.
 
     TODO(@jlyle): Docstring
+
     """
 
     PLIST_INFO_TYPE_FILE = "file"
@@ -146,7 +147,10 @@ class PlistHelper:
         plist_info_type: str,
         plist_info: str | bytes | bytearray,
     ) -> None:
-        """TODO(@jlyle): Docstring"""
+        """Contstructor for the Plist class.
+
+        TODO(@jlyle): Docstring
+        """
         # List of instance attributes before initialization
         self.__plist_info_type = None
         self.__plist_info_format = None
@@ -171,11 +175,17 @@ class PlistHelper:
             self.__plist_info_format, self.__plist_data = self.__parse_file(plist_info)
 
     def __str__(self) -> str:
-        """TODO(@jlyle): Docstring"""
+        """Print out the python data representation of the plist.
+
+        TODO(@jlyle): Docstring
+        """
         return _plistlib.dumps(self.__plist_data, sort_keys=False).decode()
 
     def __repr__(self) -> str:
-        """TODO(@jlyle): Docstring"""
+        """Print out a serialized version of the plist instance.
+
+        TODO(@jlyle): Docstring
+        """
         if self.__plist_info_type == self.PLIST_INFO_TYPE_FILE:
             return 'Plist("' + self.__plist_info + '")'
 

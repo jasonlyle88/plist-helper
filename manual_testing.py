@@ -50,13 +50,13 @@ pl.print()
 
 pl = PlistHelper(b"<plist><string></string></plist>")
 pl.merge(
-    b"<plist><dict><key>foo</key><string>bar</string></dict></plist>", overwrite=True
+    b"<plist><dict><key>foo</key><string>bar</string></dict></plist>", overwrite=True,
 )
 pl.print()
 
 pl = PlistHelper(b"<plist><string></string></plist>")
 pl.merge(
-    b"<plist><dict><key>one</key><integer>1</integer></dict></plist>", overwrite=True
+    b"<plist><dict><key>one</key><integer>1</integer></dict></plist>", overwrite=True,
 )
 pl.print()
 
@@ -80,7 +80,7 @@ pl.merge(
 pl.print()
 
 pl = PlistHelper(
-    b"<plist><array><string>one</string><string>two</string><string>three</string></array></plist>"
+    b"<plist><array><string>one</string><string>two</string><string>three</string></array></plist>",
 )
 pl.merge(
     b"<plist><array><string>cero</string><string>one</string><string>dos</string><string>three</string><string>quatro</string></array></plist>",
