@@ -44,8 +44,7 @@ class PlistHelper:
         For this reason, it is recommended to always represent plist arrays as python
         lists instead of tuples.
 
-    TODO(@jlyle)
-
+    TODO(@jlyle): Docstring
     """
 
     PLIST_INFO_TYPE_FILE = "file"
@@ -147,7 +146,7 @@ class PlistHelper:
         plist_info_type: str,
         plist_info: str | bytes | bytearray,
     ) -> None:
-        """TODO(@jlyle)."""
+        """TODO(@jlyle): Docstring"""
         # List of instance attributes before initialization
         self.__plist_info_type = None
         self.__plist_info_format = None
@@ -172,11 +171,11 @@ class PlistHelper:
             self.__plist_info_format, self.__plist_data = self.__parse_file(plist_info)
 
     def __str__(self) -> str:
-        """TODO(@jlyle)."""
+        """TODO(@jlyle): Docstring"""
         return _plistlib.dumps(self.__plist_data, sort_keys=False).decode()
 
     def __repr__(self) -> str:
-        """TODO(@jlyle)."""
+        """TODO(@jlyle): Docstring"""
         if self.__plist_info_type == self.PLIST_INFO_TYPE_FILE:
             return 'Plist("' + self.__plist_info + '")'
 
@@ -189,7 +188,7 @@ class PlistHelper:
     def __get_file_format_from_name(cls, file_format: str) -> _MappingProxyType:
         """Get a plist file format specification based on the provided  file format name.
 
-        TODO(@jlyle)
+        TODO(@jlyle): Docstring
         """
         try:
             result = cls.FILE_FORMATS[file_format.lower()]
@@ -204,7 +203,7 @@ class PlistHelper:
     def __get_entry_data_type_by_name(cls, data_type_name: str) -> dict:
         """Get a plist data type specification based on the provided data type name.
 
-        TODO(@jlyle)
+        TODO(@jlyle): Docstring
         """
         try:
             result = cls.ENTRY_DATA_TYPES[data_type_name.lower()]
@@ -219,7 +218,7 @@ class PlistHelper:
     def __get_entry_data_type_by_class(cls, data: object) -> dict:
         """Get a plist data type specification based on the data type class of the provided object.
 
-        TODO(@jlyle)
+        TODO(@jlyle): Docstring
         """
         # Compare types rather than using isinstance because bool is a subclass
         # of int and will return too many results
@@ -252,7 +251,7 @@ class PlistHelper:
     ) -> dict | list | bool | bytes | int | float | str:
         """Get the parsed plist bytestring data.
 
-        TODO(@jlyle)
+        TODO(@jlyle): Docstring
         """
         try:
             fp = _BytesIO(plist_bytes)
@@ -283,7 +282,7 @@ class PlistHelper:
     ) -> tuple[_MappingProxyType, dict | list | bool | bytes | int | float | str]:
         """Get the parsed plist file data.
 
-        TODO(@jlyle)
+        TODO(@jlyle): Docstring
         """
         assert_(
             isinstance(plist_file, str),
@@ -317,7 +316,7 @@ class PlistHelper:
     def __normalize_path(cls, path: list | tuple | str | int) -> list:
         """Take a path list/tuple/str/int and make sure it is always a list.
 
-        TODO(@jlyle)
+        TODO(@jlyle): Docstring
         """
         new_path = None
 
@@ -355,7 +354,7 @@ class PlistHelper:
     ) -> None:
         """Create a new, valid plist file with an empty root entry.
 
-        TODO(@jlyle)
+        TODO(@jlyle): Docstring
         """
         file_format_spec = cls.__get_file_format_from_name(output_format)
         entry_data_type_spec = cls.__get_entry_data_type_by_name(data_type)
@@ -382,7 +381,7 @@ class PlistHelper:
     ) -> bytes:
         """Convert a given plist representation to the specified format.
 
-        TODO(@jlyle)
+        TODO(@jlyle): Docstring
         """
         file_format_spec = cls.__get_file_format_from_name(output_format)
 
@@ -407,7 +406,7 @@ class PlistHelper:
     ) -> None:
         """Convert a given plist file to the specified format.
 
-        TODO(@jlyle)
+        TODO(@jlyle): Docstring
         """
         file_format_spec = cls.__get_file_format_from_name(output_format)
 
@@ -427,7 +426,7 @@ class PlistHelper:
     ) -> _MappingProxyType:
         """Get the format of the parsed plist_info used to instantiate the class.
 
-        TODO(@jlyle)
+        TODO(@jlyle): Docstring
         """
         return self.__plist_info_format
 
@@ -436,7 +435,7 @@ class PlistHelper:
     ) -> str | bytes | bytearray:
         """Get the plist_info used to instantiate the class.
 
-        TODO(@jlyle)
+        TODO(@jlyle): Docstring
         """
         return self.__plist_info
 
@@ -445,7 +444,7 @@ class PlistHelper:
 
         Will return None if unable to parse the file.
 
-        TODO(@jlyle)
+        TODO(@jlyle): Docstring
         """
         data = self.__plist_data
 
@@ -457,7 +456,7 @@ class PlistHelper:
     def exists(self, path: list | tuple | str | int) -> bool:
         """Check if an entry exists.
 
-        TODO(@jlyle)
+        TODO(@jlyle): Docstring
         """
         path = self.__normalize_path(path)
 
@@ -476,7 +475,7 @@ class PlistHelper:
     ) -> dict | list | bool | bytes | int | float | str:
         """Get the python data representation of a plist entry.
 
-        TODO(@jlyle)
+        TODO(@jlyle): Docstring
         """
         assert_(
             isinstance(path, list),
@@ -525,7 +524,7 @@ class PlistHelper:
     ) -> dict | list | bool | bytes | int | float | str:
         """Get the python data representation of a plist entry.
 
-        TODO(@jlyle)
+        TODO(@jlyle): Docstring
         """
         path = self.__normalize_path(path)
 
@@ -539,7 +538,7 @@ class PlistHelper:
     def get_type(self, path: list | tuple | str | int | None = None) -> str:
         """Get the plist type of the entry.
 
-        TODO(@jlyle)
+        TODO(@jlyle): Docstring
         """
         path = self.__normalize_path(path)
 
@@ -552,7 +551,7 @@ class PlistHelper:
     def get_dict_keys(self, path: list | tuple | str | int | None = None) -> tuple:
         """Get the keys of the specified dict entry.
 
-        TODO(@jlyle)
+        TODO(@jlyle): Docstring
         """
         path = self.__normalize_path(path)
 
@@ -570,7 +569,7 @@ class PlistHelper:
     def get_array_length(self, path: list | tuple | str | int | None = None) -> int:
         """Get the length of the specified array entry.
 
-        TODO(@jlyle)
+        TODO(@jlyle): Docstring
         """
         path = self.__normalize_path(path)
 
@@ -593,7 +592,7 @@ class PlistHelper:
     ) -> None:
         """Print the plist to the screen formatted in the specified format starting at the specified entry.
 
-        TODO(@jlyle)
+        TODO(@jlyle): Docstring
         """
         assert_(
             isinstance(output_sort, bool),
@@ -646,7 +645,7 @@ class PlistHelper:
         this object. If a plist representation was used to instantiate this object,
         then a RuntimeError is thrown.
 
-        TODO(@jlyle)
+        TODO(@jlyle): Docstring
         """
         assert_(
             isinstance(output_sort, bool),
@@ -702,7 +701,7 @@ class PlistHelper:
     ) -> None:
         """Insert a new entry into the plist.
 
-        TODO(@jlyle)
+        TODO(@jlyle): Docstring
         """
         root_data_type_spec = self.__get_entry_data_type_by_class(self.__plist_data)
 
@@ -782,7 +781,7 @@ class PlistHelper:
         created at the specified path. The parent of the specified path must
         already exist for this to work.
 
-        TODO(@jlyle)
+        TODO(@jlyle): Docstring
         """
         root_data_type_spec = self.__get_entry_data_type_by_class(self.__plist_data)
 
@@ -835,7 +834,7 @@ class PlistHelper:
 
         Updates are allowed to change the data type of the entry.
 
-        TODO(@jlyle)
+        TODO(@jlyle): Docstring
         """
         root_data_type_spec = self.__get_entry_data_type_by_class(self.__plist_data)
 
@@ -886,7 +885,7 @@ class PlistHelper:
     def delete(self, path: list | tuple | str | int) -> None:
         """Delete an entry from a plist.
 
-        TODO(@jlyle)
+        TODO(@jlyle): Docstring
         """
         root_data_type_spec = self.__get_entry_data_type_by_class(self.__plist_data)
 
@@ -929,7 +928,7 @@ class PlistHelper:
     ) -> None:
         """Insert or update a plist entry depending on if the entry specified by the path already exists or not.
 
-        TODO(@jlyle)
+        TODO(@jlyle): Docstring
         """
         path = self.__normalize_path(path)
 
@@ -946,7 +945,7 @@ class PlistHelper:
     ) -> None:
         """Recursively merge python data (source_entry) into the current plist.
 
-        TODO(@jlyle)
+        TODO(@jlyle): Docstring
         """
         target_path = self.__normalize_path(target_path)
 
@@ -1039,7 +1038,7 @@ class PlistHelper:
     ) -> None:
         """Merge in a plist file (or a subset of a plist file) to the current plist.
 
-        TODO(@jlyle)
+        TODO(@jlyle): Docstring
         """
         ########################################################################
         ##  Parameter verifications
