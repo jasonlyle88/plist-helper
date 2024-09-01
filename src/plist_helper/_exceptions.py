@@ -1,0 +1,2 @@
+class PlistHelperError(Exception):
+    pass
