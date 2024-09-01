@@ -368,7 +368,7 @@ def __exit(status: int = 0, message: str | None = None) -> None:
     _sys.exit(status)
 
 
-def __get_class_from_method_handle(handle):
+def __get_class_from_method_handle(handle: object) -> object:
     # Extract the qualified name of the method
     qualname = handle.__qualname__
 
@@ -382,7 +382,7 @@ def __get_class_from_method_handle(handle):
     return getattr(module, class_name)
 
 
-def __get_original_descriptor_from_handle(handle):
+def __get_original_descriptor_from_handle(handle: object) -> object | None:
     cls = __get_class_from_method_handle(handle)
     for name, member in cls.__dict__.items():
         if getattr(cls, name) == handle:
