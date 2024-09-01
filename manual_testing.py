@@ -1,4 +1,5 @@
 # pylint: skip-file
+# ruff: noqa
 
 # python src/plist_helper -h
 
