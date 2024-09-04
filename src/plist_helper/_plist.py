@@ -10,6 +10,12 @@ import tempfile as _tempfile
 from io import BytesIO as _BytesIO
 from types import MappingProxyType as _MappingProxyType
 
+from plist_helper._exceptions import (
+    PlistHelperKeyError,
+    PlistHelperRuntimeError,
+    PlistHelperTypeError,
+    PlistHelperValueError,
+)
 from plist_helper._helpers import assert_
 
 
@@ -158,7 +164,7 @@ class PlistHelper:
         self.__plist_data = None
 
         if plist_info_type not in self.__PLIST_INFO_TYPES:
-            raise RuntimeError(
+            raise PlistHelperRuntimeError(
                 'Invalid plist_info_type: "' + str(plist_info_type) + '"',
             )
 
@@ -170,7 +176,7 @@ class PlistHelper:
         elif plist_info_type == self.PLIST_INFO_TYPE_FILE:
             plist_info = _os_path.realpath(plist_info)
             if not _os_path.isfile(plist_info):
-                raise RuntimeError("Cannot find plist file: " + plist_info)
+                raise PlistHelperRuntimeError("Cannot find plist file: " + plist_info)
 
 
             self.__plist_info = plist_info
@@ -205,7 +211,7 @@ class PlistHelper:
         try:
             result = cls.FILE_FORMATS[file_format.lower()]
         except KeyError as e:
-            raise ValueError(
+            raise PlistHelperValueError(
                 'Invalid file format specified: "' + file_format + '"',
             ) from e
 
@@ -220,7 +226,7 @@ class PlistHelper:
         try:
             result = cls.ENTRY_DATA_TYPES[data_type_name.lower()]
         except KeyError as e:
-            raise ValueError(
+            raise PlistHelperValueError(
                 'Invalid entry data type specified: "' + data_type_name + '"',
             ) from e
 
@@ -268,7 +274,7 @@ class PlistHelper:
         try:
             fp = _BytesIO(plist_bytes)
         except Exception as e:
-            raise RuntimeError("Unable to load bytes-like object") from e
+            raise PlistHelperRuntimeError("Unable to load bytes-like object") from e
 
         try:
             # Attempt to parse the converted bytes
@@ -283,7 +289,7 @@ class PlistHelper:
             else:
                 fmt = cls.__get_file_format_from_name("xml")
         except Exception as e:
-            raise ValueError("Unable to parse provided plist") from e
+            raise PlistHelperValueError("Unable to parse provided plist") from e
 
         return fmt, plist
 
@@ -318,9 +324,9 @@ class PlistHelper:
                 else:
                     fmt = cls.__get_file_format_from_name("xml")
         except OSError as e:
-            raise ValueError("Unable to open provided file") from e
+            raise PlistHelperValueError("Unable to open provided file") from e
         except Exception as e:
-            raise ValueError("Unable to parse provided file") from e
+            raise PlistHelperValueError("Unable to parse provided file") from e
 
         return fmt, plist
 
@@ -518,15 +524,15 @@ class PlistHelper:
                     new_path_part = str(new_path_part)
                     entry = entry[new_path_part]
                 except Exception as e:
-                    raise KeyError(key_error_text) from e
+                    raise PlistHelperKeyError(key_error_text) from e
             elif isinstance(entry, list):
                 try:
                     new_path_part = int(new_path_part)
                     entry = entry[new_path_part]
                 except Exception as e:
-                    raise KeyError(key_error_text) from e
+                    raise PlistHelperKeyError(key_error_text) from e
             else:
-                raise KeyError(key_error_text)
+                raise PlistHelperKeyError(key_error_text)
 
         return entry
 
@@ -734,7 +740,7 @@ class PlistHelper:
         try:
             self.__get_entry_data_type_by_class(value)
         except Exception as e:
-            raise TypeError("Invalid data type for provided value") from e
+            raise PlistHelperTypeError("Invalid data type for provided value") from e
 
         assert_(
             not self.exists(path),
@@ -747,7 +753,7 @@ class PlistHelper:
         try:
             parent_entry = self.__get(self.__plist_data, parent_path)
         except KeyError as e:
-            raise KeyError("Cannot get entry parent") from e
+            raise PlistHelperKeyError("Cannot get entry parent") from e
 
         parent_entry_data_type_spec = self.__get_entry_data_type_by_class(parent_entry)
 
@@ -755,7 +761,7 @@ class PlistHelper:
             try:
                 insertion_key = int(insertion_key)
             except Exception as e:
-                raise ValueError(
+                raise PlistHelperValueError(
                     "Inserting into an array requires an integer path spec",
                 ) from e
 
@@ -767,7 +773,7 @@ class PlistHelper:
             try:
                 insertion_key = str(insertion_key)
             except Exception as e:
-                raise ValueError(
+                raise PlistHelperValueError(
                     "Inserting into a dict requires a string path spec",
                 ) from e
 
@@ -775,7 +781,7 @@ class PlistHelper:
             # Have plistlib process the value to see if it is valid
             _plistlib.dumps(value)
         except Exception as e:
-            raise ValueError("Value to insert is not valid plist data") from e
+            raise PlistHelperValueError("Value to insert is not valid plist data") from e
 
         if parent_entry_data_type_spec["name"] == "array":
             parent_entry.insert(insertion_key, value)
@@ -862,7 +868,7 @@ class PlistHelper:
         try:
             self.__get_entry_data_type_by_class(value)
         except Exception as e:
-            raise TypeError("Invalid data type for provided value") from e
+            raise PlistHelperTypeError("Invalid data type for provided value") from e
 
         assert_(
             self.exists(path),
@@ -873,7 +879,7 @@ class PlistHelper:
             # Have plistlib process the value to see if it is valid
             _plistlib.dumps(value)
         except Exception as e:
-            raise TypeError("Value to update to is not valid plist data") from e
+            raise PlistHelperTypeError("Value to update to is not valid plist data") from e
 
         if len(path) == 0:
             # Updating root entry of non-collection data type
@@ -1069,7 +1075,7 @@ class PlistHelper:
         try:
             source_entry = source_plist_helper.get(source_path)
         except Exception as e:
-            raise RuntimeError("Invalid source_path") from e
+            raise PlistHelperRuntimeError("Invalid source_path") from e
 
         ########################################################################
         ##  Merge

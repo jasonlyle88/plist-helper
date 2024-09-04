@@ -10,6 +10,11 @@ import textwrap as _textwrap
 import typing as _typing
 from types import MappingProxyType as _MappingProxyType
 
+from plist_helper._exceptions import (
+    PlistHelperRuntimeError,
+    PlistHelperTypeError,
+    PlistHelperValueError,
+)
 from plist_helper._plist import PlistHelper as _PlistHelper
 
 __TRUTHY_VALUES = (
@@ -486,7 +491,7 @@ def __handle_arguments(args: _argparse.Namespace) -> dict:
             main_method_kwargs["value_data_type"] in ["array", "dict"]
             and value_specified
         ):
-            raise RuntimeError(
+            raise PlistHelperRuntimeError(
                 "Cannot provide a value when data type is array or dict",
             )  # TODO(@jlyle): Generic error handling needs to be done here
 
@@ -494,7 +499,7 @@ def __handle_arguments(args: _argparse.Namespace) -> dict:
             main_method_kwargs["value_data_type"] not in ["array", "dict"]
             and not value_specified
         ):
-            raise RuntimeError(
+            raise PlistHelperRuntimeError(
                 "A value must be provided when the data type is a simple data type",
             )  # TODO(@jlyle): Generic error handling needs to be done here
 
@@ -536,14 +541,14 @@ def __convert_provided_value_to_data_type(  # noqa: C901,PLR0912
 
     # Check value against provided data type
     if value_data_type in ("array", "dict") and "value" in main_method_kwargs:
-        raise RuntimeError("Value cannot be provided for collection types")  # TODO(@jlyle): Generic error handling needs to be done here
+        raise PlistHelperRuntimeError("Value cannot be provided for collection types")  # TODO(@jlyle): Generic error handling needs to be done here
 
     if value_data_type not in ("array", "dict"):
         if "value" not in main_method_kwargs:
-            raise RuntimeError("Value must be provided for simple types")  # TODO(@jlyle): Generic error handling needs to be done here
+            raise PlistHelperRuntimeError("Value must be provided for simple types")  # TODO(@jlyle): Generic error handling needs to be done here
 
         if not isinstance(main_method_kwargs["value"], str):
-            raise TypeError("Expected to convert str") # TODO(@jlyle): Generic error handling needs to be done here
+            raise PlistHelperTypeError("Expected to convert str") # TODO(@jlyle): Generic error handling needs to be done here
 
     # Attempt to convert the provided value to the appropriate python type
     # based on the provided data type
@@ -585,7 +590,7 @@ def __convert_provided_value_to_data_type(  # noqa: C901,PLR0912
         pass # Value data type is already a string, nothing to do
 
     else:
-        raise ValueError(
+        raise PlistHelperValueError(
             f"Unexpected data type '{value_data_type}'",
         )  # TODO(@jlyle): Generic error handling needs to be done here
 
@@ -604,7 +609,7 @@ def __execute_main_method(argument_results: dict) -> None:
         execution_exception = e
 
     if execution_exception is not None:
-        raise execution_exception  # TODO(@jlyle): Generic error handling needs to be done here
+        raise execution_exception
 
     if action_spec["main_method_post"] is None:
         pass
@@ -617,7 +622,7 @@ def __execute_main_method(argument_results: dict) -> None:
             # 0 is successful exit code
             __exit(int(not result))
         elif isinstance(result, (dict, set, tuple, list)):
-            raise ValueError(
+            raise PlistHelperValueError(
                 "Cannot print collection values",
             )  # TODO(@jlyle): Generic error handling needs to be done here
         else:
