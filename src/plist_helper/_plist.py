@@ -172,25 +172,27 @@ class PlistHelper:
             if not _os_path.isfile(plist_info):
                 raise RuntimeError("Cannot find plist file: " + plist_info)
 
+
+            self.__plist_info = plist_info
             self.__plist_info_format, self.__plist_data = self.__parse_file(plist_info)
 
     def __str__(self) -> str:
-        """Print out the python data representation of the plist.
+        """Print out the plist file contents.
 
         TODO(@jlyle): Docstring
         """
         return _plistlib.dumps(self.__plist_data, sort_keys=False).decode()
 
     def __repr__(self) -> str:
-        """Print out a serialized version of the plist instance.
+        """Print out a serialized version of the PlistHelper instance.
 
         TODO(@jlyle): Docstring
         """
         if self.__plist_info_type == self.PLIST_INFO_TYPE_FILE:
-            return 'Plist("' + self.__plist_info + '")'
+            return self.__class__.__qualname__ + '("' + self.__plist_info_type + '", "' + self.__plist_info + '")'
 
         if self.__plist_info_type == self.PLIST_INFO_TYPE_REPRESENTATION:
-            return "Plist(" + repr(self.__plist_info) + ")"
+            return self.__class__.__qualname__ + '("' + self.__plist_info_type + '", ' + repr(self.__plist_info) + ")"
 
         return None
 
