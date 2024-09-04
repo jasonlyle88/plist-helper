@@ -11,6 +11,7 @@ import typing as _typing
 from types import MappingProxyType as _MappingProxyType
 
 from plist_helper._exceptions import (
+    PlistHelperError,
     PlistHelperRuntimeError,
     PlistHelperTypeError,
     PlistHelperValueError,
@@ -633,14 +634,17 @@ def __execute_main_method(argument_results: dict) -> None:
 
 def main() -> None:
     """Run the plistHelper command line interface."""
-    parser = __setup_argparse()
+    try:
+        parser = __setup_argparse()
 
-    args = parser.parse_args()
+        args = parser.parse_args()
 
-    argument_results = __handle_arguments(args)
+        argument_results = __handle_arguments(args)
 
-    __convert_provided_value_to_data_type(argument_results)
+        __convert_provided_value_to_data_type(argument_results)
 
-    __execute_main_method(argument_results)
+        __execute_main_method(argument_results)
 
-    __exit(0)
+        __exit(0)
+    except PlistHelperError as e:
+        _sys.stderr.write("ERROR: " + str(e) + "\n")

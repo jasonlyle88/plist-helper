@@ -8,10 +8,12 @@ INFO_TYPE_REPRESENTATION = PlistHelper.PLIST_INFO_TYPE_REPRESENTATION
 ENTRY_DATA_TYPES = PlistHelper.ENTRY_DATA_TYPES
 FILE_FORMATS = PlistHelper.FILE_FORMATS
 PlistHelperError = _exceptions.PlistHelperError
+PlistHelperIndexError = _exceptions.PlistHelperIndexError
+PlistHelperKeyError = _exceptions.PlistHelperKeyError
+PlistHelperOverflowError = _exceptions.PlistHelperOverflowError
 PlistHelperRuntimeError = _exceptions.PlistHelperRuntimeError
 PlistHelperTypeError = _exceptions.PlistHelperTypeError
 PlistHelperValueError = _exceptions.PlistHelperValueError
-PlistHelperKeyError = _exceptions.PlistHelperKeyError
 
 __all__ = [
     "PlistHelper",
@@ -20,8 +22,10 @@ __all__ = [
     "INFO_TYPE_FILE",
     "INFO_TYPE_REPRESENTATION",
     "PlistHelperError",
+    "PlistHelperIndexError",
+    "PlistHelperKeyError",
+    "PlistHelperOverflowError",
     "PlistHelperRuntimeError",
     "PlistHelperTypeError",
     "PlistHelperValueError",
-    "PlistHelperKeyError",
 ]
