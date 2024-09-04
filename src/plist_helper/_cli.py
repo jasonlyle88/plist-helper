@@ -469,7 +469,7 @@ def __handle_arguments(args: _argparse.Namespace) -> dict:
         try:
             plist_target = _PlistHelper(_PlistHelper.PLIST_INFO_TYPE_FILE, args.plist_target)
         except Exception:
-            __exit(status=101, message="Unable to open target plist file\n")  # TODO(@jlyle): Generic error handling needs to be done here
+            __exit(status=101, message="ERROR: Unable to open target plist file\n")
 
         main_method_args = [
             plist_target,
@@ -477,10 +477,10 @@ def __handle_arguments(args: _argparse.Namespace) -> dict:
     else:
         __exit(
             status=123,
-            message='Action main method not recognized type: "'
+            message='ERROR: Action main method not recognized type: "'
             + type(typed_handle).__name__
             + '"\n',
-        ) # TODO(@jlyle): Generic error handling needs to be done here
+        )
 
     if "value_data_type" in main_method_kwargs:
         # Verify parameter combinations
@@ -494,7 +494,7 @@ def __handle_arguments(args: _argparse.Namespace) -> dict:
         ):
             raise PlistHelperRuntimeError(
                 "Cannot provide a value when data type is array or dict",
-            )  # TODO(@jlyle): Generic error handling needs to be done here
+            )
 
         if (
             main_method_kwargs["value_data_type"] not in ["array", "dict"]
@@ -502,7 +502,7 @@ def __handle_arguments(args: _argparse.Namespace) -> dict:
         ):
             raise PlistHelperRuntimeError(
                 "A value must be provided when the data type is a simple data type",
-            )  # TODO(@jlyle): Generic error handling needs to be done here
+            )
 
     if "value" in main_method_kwargs and main_method_kwargs["value"] is None:
         del main_method_kwargs["value"]
@@ -511,7 +511,7 @@ def __handle_arguments(args: _argparse.Namespace) -> dict:
         try:
             source_plist_helper = _PlistHelper(_PlistHelper.PLIST_INFO_TYPE_FILE, main_method_kwargs["plist_source"])
         except Exception:
-            __exit(status=101, message="Unable to open source plist file\n")  # TODO(@jlyle): Generic error handling needs to be done here
+            __exit(status=101, message="ERROR: Unable to open source plist file\n")
 
         del main_method_kwargs["plist_source"]
         main_method_kwargs["source_plist_helper"] = source_plist_helper
@@ -542,14 +542,14 @@ def __convert_provided_value_to_data_type(  # noqa: C901,PLR0912
 
     # Check value against provided data type
     if value_data_type in ("array", "dict") and "value" in main_method_kwargs:
-        raise PlistHelperRuntimeError("Value cannot be provided for collection types")  # TODO(@jlyle): Generic error handling needs to be done here
+        raise PlistHelperRuntimeError("Value cannot be provided for collection types")
 
     if value_data_type not in ("array", "dict"):
         if "value" not in main_method_kwargs:
-            raise PlistHelperRuntimeError("Value must be provided for simple types")  # TODO(@jlyle): Generic error handling needs to be done here
+            raise PlistHelperRuntimeError("Value must be provided for simple types")
 
         if not isinstance(main_method_kwargs["value"], str):
-            raise PlistHelperTypeError("Expected to convert str") # TODO(@jlyle): Generic error handling needs to be done here
+            raise PlistHelperTypeError("Expected to convert str")
 
     # Attempt to convert the provided value to the appropriate python type
     # based on the provided data type
@@ -570,7 +570,7 @@ def __convert_provided_value_to_data_type(  # noqa: C901,PLR0912
                 main_method_kwargs["value"],
             )
         except ValueError as e:
-            raise e  # TODO(@jlyle): Generic error handling needs to be done here
+            raise PlistHelperValueError(*(e.args)) from e
 
     elif value_data_type == "dict":
         main_method_kwargs["value"] = {}
@@ -579,13 +579,13 @@ def __convert_provided_value_to_data_type(  # noqa: C901,PLR0912
         try:
             main_method_kwargs["value"] = int(main_method_kwargs["value"])
         except ValueError as e:
-            raise e  # TODO(@jlyle): Generic error handling needs to be done here
+            raise PlistHelperValueError(*(e.args)) from e
 
     elif value_data_type == "real":
         try:
             main_method_kwargs["value"] = float(main_method_kwargs["value"])
         except ValueError as e:
-            raise e  # TODO(@jlyle): Generic error handling needs to be done here
+            raise PlistHelperValueError(*(e.args)) from e
 
     elif value_data_type == "string":
         pass # Value data type is already a string, nothing to do
@@ -593,7 +593,7 @@ def __convert_provided_value_to_data_type(  # noqa: C901,PLR0912
     else:
         raise PlistHelperValueError(
             f"Unexpected data type '{value_data_type}'",
-        )  # TODO(@jlyle): Generic error handling needs to be done here
+        )
 
 
 def __execute_main_method(argument_results: dict) -> None:
@@ -625,7 +625,7 @@ def __execute_main_method(argument_results: dict) -> None:
         elif isinstance(result, (dict, set, tuple, list)):
             raise PlistHelperValueError(
                 "Cannot print collection values",
-            )  # TODO(@jlyle): Generic error handling needs to be done here
+            )
         else:
             _sys.stdout.write(str(result) + "\n")
     elif action_spec["main_method_post"] == "write_to_file":
@@ -648,3 +648,4 @@ def main() -> None:
         __exit(0)
     except PlistHelperError as e:
         _sys.stderr.write("ERROR: " + str(e) + "\n")
+        __exit(1)
